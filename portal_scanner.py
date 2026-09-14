@@ -149,6 +149,7 @@ class PortalScanner:
         chat_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Executes a manual or automated scan across portals, parses fresh data, 
+        evaluates AI relevance, and notifies on high matches."""
         try:
             from src.tender_ai.tender_finder import TenderFinder
         except ImportError:
