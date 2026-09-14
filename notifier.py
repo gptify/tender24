@@ -51,7 +51,7 @@ class TenderNotifier:
             f"💰 <b>Boshlang'ich narx:</b> <b>{price}</b>\n"
             f"⏳ <b>Topshirish muddati:</b> <b>{deadline}</b>\n"
             f"━━━━━━━━━━━━━━━━━━━\n"
-            f"👉 <b><a href=\"{app_lot_link}\">Tender24 Ilovasida Ko'rish va Tahlil Qilish ➔</a></b>\n"
+            f"👉 <b><a href=\"{app_lot_link}\">TenderPro²⁴ Ilovasida Ko'rish va Tahlil Qilish ➔</a></b>\n"
             f"🔗 <a href=\"{link}\">Rasmiy Portaldagi Lot Sahifasi</a>"
         )
 

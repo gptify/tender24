@@ -37,7 +37,7 @@ except ImportError:
 
 # Page Configuration
 st.set_page_config(
-    page_title="TenderPro AI — O'zbekiston Tenderlari Auditi",
+    page_title="TenderPro²⁴ — O'zbekiston Davlat va B2B Tenderlari Auditi",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -258,10 +258,10 @@ st.markdown("""
             ⚖️
         </div>
         <div>
-            <div style="font-size: 1.25rem; font-weight: 800; color: #0F172A; line-height: 1.2;">
-                TenderPro AI <span style="font-size: 0.72rem; background-color: #EFF6FF; color: #1D4ED8; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #BFDBFE;">v2.0 PRO</span>
+            <div style="font-size: 1.35rem; font-weight: 900; color: #0F172A; line-height: 1.1; letter-spacing: -0.02em;">
+                TenderPro<span style="color: #2563EB;">²⁴</span> <span style="font-size: 0.72rem; background-color: #0F172A; color: #38BDF8; font-weight: 700; padding: 2px 8px; border-radius: 8px; border: 1px solid #1E293B; vertical-align: middle;">AI SUITE</span>
             </div>
-            <div style="font-size: 0.82rem; color: #64748B;">O'zbekiston Davlat va Korporativ Xaridlar AI Agenti • GPTify Uzbekistan Jamoasi</div>
+            <div style="font-size: 0.82rem; color: #64748B;">O'zbekiston Davlat, BMT va B2B Xaridlar Intellekti • GPTify.co</div>
         </div>
     </div>
     <div>
