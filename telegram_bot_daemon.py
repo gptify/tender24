@@ -50,10 +50,9 @@ class TelegramAlertDaemon:
         bot_token: Optional[str] = None,
         chat_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Checks for newly published lots, filters by relevance, and sends instant Telegram alerts."""
         profile = company_profile or DEFAULT_COMPANY_PROFILE
-        token = bot_token or os.getenv("TELEGRAM_BOT_TOKEN", "")
-        target_chat = chat_id or os.getenv("TELEGRAM_CHAT_ID", "")
+        token = (bot_token or os.getenv("TENDER_BOT_TOKEN", "") or os.getenv("MASTER_BOT_TOKEN", "") or os.getenv("TELEGRAM_BOT_TOKEN", "")).strip()
+        target_chat = (chat_id or os.getenv("TELEGRAM_ADMIN_CHAT_ID", "") or os.getenv("TELEGRAM_CHAT_ID", "")).strip()
 
         # Fetch latest 40 lots from UzEx
         latest_lots = PortalScanner.fetch_uzex_live_lots(limit=40)
