@@ -40,13 +40,31 @@ st.set_page_config(
     page_title="TenderPro²⁴ — O'zbekiston Davlat va B2B Tenderlari Auditi",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Custom Styling: EuroWork AI & MedPro24 Modern B2B SaaS Theme
+# Custom Styling: StepStone.de & EuroWork AI Modern B2B SaaS Theme
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
+    /* Zero Top Margin & Clean Full-Width Canvas */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+    section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+    .block-container {
+        padding-top: 0.5rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        max-width: 100% !important;
+    }
 
     html, body, [class*="css"], .stApp {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -89,12 +107,18 @@ st.markdown("""
         color: #1D4ED8 !important;
     }
 
+    /* StepStone Signature Primary Action (Emerald / Teal #00C091) */
     .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+        background: linear-gradient(135deg, #00C091 0%, #059669 100%) !important;
         color: #FFFFFF !important;
         border: none !important;
         font-weight: 700 !important;
-        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
+        box-shadow: 0 2px 8px rgba(0, 192, 145, 0.3) !important;
+        border-radius: 8px !important;
+    }
+    .stButton > button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+        box-shadow: 0 4px 12px rgba(0, 192, 145, 0.45) !important;
     }
 
     /* Stepper & Onboarding */
@@ -174,216 +198,50 @@ Mavzu: "Davlat organlari uchun yagona avtomatlashtirilgan sun'iy intellekt CRM v
 4.3. Ishtirokchi server uskunalari faqat "Brand-X Server Model-9000" rusumli bo'lishi shart deb ko'rsatilgan.
 """
 
-# Sidebar Configuration: User Authentication & Company Profile
-with st.sidebar:
-    logo_file = Path(__file__).resolve().parent / "logo.jpg"
-    if not logo_file.exists():
-        logo_file = Path("logo.jpg")
-    if logo_file.exists():
-        st.image(str(logo_file), use_container_width=True)
-    
-    st.header("👤 Foydalanuvchi & Profil")
-    
-    # Initialize session user: ANY NEW VISITOR STARTS AS ANONYMOUS GUEST (Sinov rejimi)
-    if "auth_user" not in st.session_state:
-        st.session_state["auth_user"] = {
-            "id": None,
-            "username": "mehmon",
-            "company_name": "Mening Kompaniyam",
-            "tier": "free",
-            "credits_left": 3,
-            "is_guest": True
-        }
-    else:
-        # If logged in as registered user, refresh from DB
-        if not st.session_state["auth_user"].get("is_guest"):
-            refreshed = DatabaseManager.get_user(st.session_state["auth_user"]["username"])
-            if refreshed:
-                st.session_state["auth_user"] = refreshed
+# =========================================================
+# User Authentication & Session State Initialization
+# =========================================================
+if "auth_user" not in st.session_state:
+    st.session_state["auth_user"] = {
+        "id": None,
+        "username": "mehmon",
+        "company_name": "Mening Kompaniyam",
+        "tier": "free",
+        "credits_left": 3,
+        "is_guest": True
+    }
+else:
+    if not st.session_state["auth_user"].get("is_guest"):
+        refreshed = DatabaseManager.get_user(st.session_state["auth_user"]["username"])
+        if refreshed:
+            st.session_state["auth_user"] = refreshed
 
-    current_user = st.session_state["auth_user"]
-    is_guest = current_user.get("is_guest", False)
-    is_admin = (not is_guest) and (current_user.get("username") in ["demo", "admin", "shukhrat"])
-    
-    if is_guest:
-        tier_badge = f"⭐ Bepul Sinov ({current_user.get('credits_left', 3)} ta audit mavjud)"
-        st.markdown(f"""
-        <div style="background-color: #F8FAFC; border: 1.5px dashed #94A3B8; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 700; color: #0F172A; font-size: 0.95rem;">👤 Mehmon (Sinov Rejimi)</span>
-                <span style="background: #FEF3C7; color: #D97706; font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 1px solid #FDE68A;">Sinov</span>
-            </div>
-            <div style="font-size: 0.8rem; color: #64748B; margin-top: 3px;">Ro'yxatdan o'tmagan tashrif buyuruvchi</div>
-            <div style="font-size: 0.84rem; color: #0284C7; font-weight: 700; margin-top: 5px;">Balans: {tier_badge}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        tier_badge = "👑 PRO (Cheksiz)" if current_user["tier"] == "pro" else f"⭐ Bepul ({current_user.get('credits_left', 0)} ta qoldi)"
-        st.markdown(f"""
-        <div style="background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="font-weight: 700; color: #1E3A8A; font-size: 1rem;">{current_user['company_name']}</div>
-            <div style="font-size: 0.84rem; color: #64748B;">Login: <strong>@{current_user['username']}</strong></div>
-            <div style="font-size: 0.86rem; color: #16A34A; font-weight: 700; margin-top: 4px;">Tarif: {tier_badge}</div>
-        </div>
-        """, unsafe_allow_html=True)
+current_user = st.session_state["auth_user"]
+is_guest = current_user.get("is_guest", False)
+is_admin = (not is_guest) and (current_user.get("username") in ["demo", "admin", "shukhrat"])
 
-    expander_title = "🎁 Ro'yxatdan o'tish yoki Kirish" if is_guest else f"⚙️ Hisob: @{current_user['username']} (Almashtirish / Chiqish)"
-    expander_default_open = is_guest
-    
-    with st.expander(expander_title, expanded=expander_default_open):
-        if is_admin:
-            tab_quick, tab_login, tab_leads = st.tabs(["⚡ Tezkor Kirish", "🔑 Login & Parol", "📊 B2B Lidlar"])
-        else:
-            tab_quick, tab_login = st.tabs(["⚡ Tezkor Kirish", "🔑 Login & Parol"])
-            tab_leads = None
-        
-        # TAB 1: QUICK SIGNUP VIA GMAIL OR PHONE
-        with tab_quick:
-            st.caption("Telefon yoki Gmail orqali 1-bosishda 3 ta bepul AI audit oling:")
-            q_comp = st.text_input("🏢 Tashkilot / Kompaniya nomi", placeholder="masalan: Grand Stroy MCHJ", key="q_comp")
-            q_person = st.text_input("👤 Mas'ul shaxs (F.I.SH)", placeholder="masalan: Jasur Rahimov", key="q_person")
-            q_phone = st.text_input("📞 Telefon raqami", placeholder="+998 90 123 45 67", key="q_phone")
-            q_email = st.text_input("📧 Gmail / Elektron pochta", placeholder="masalan: jasur@gmail.com", key="q_email")
-
-            if st.button("🎁 3 ta Bepul Audit Bilan Boshlash", key="btn_quick_reg", type="primary", use_container_width=True):
-                if not q_phone.strip() and not q_email.strip():
-                    st.warning("Iltimos, telefon raqamingiz yoki Gmail manzilingizni kiriting.")
-                else:
-                    signup_res = DatabaseManager.quick_signup(
-                        phone=q_phone,
-                        email=q_email,
-                        company_name=q_comp,
-                        contact_person=q_person
-                    )
-                    if signup_res.get("success"):
-                        user_obj = signup_res.get("user")
-                        st.session_state["auth_user"] = user_obj
-
-                        # Send real-time lead alert to Shukhrat's Telegram
-                        import os
-                        tg_token = (
-                            os.getenv("TENDER_BOT_TOKEN")
-                            or (st.secrets.get("TENDER_BOT_TOKEN") if hasattr(st, "secrets") else None)
-                            or os.getenv("TELEGRAM_BOT_TOKEN")
-                            or (st.secrets.get("TELEGRAM_BOT_TOKEN") if hasattr(st, "secrets") else None)
-                            or "8925436557:AAGHD3BK0LYoQPhUbgrdBwIQxvIqRGI9p-s"
-                        )
-                        tg_chat = (
-                            os.getenv("TENDER_CHAT_ID")
-                            or (st.secrets.get("TENDER_CHAT_ID") if hasattr(st, "secrets") else None)
-                            or os.getenv("TELEGRAM_CHAT_ID")
-                            or (st.secrets.get("TELEGRAM_CHAT_ID") if hasattr(st, "secrets") else None)
-                            or "5077641672"
-                        )
-                        if tg_token and tg_chat:
-                            TenderNotifier.send_lead_registration_alert(
-                                company_name=q_comp or user_obj.get("company_name", "Kompaniya"),
-                                contact_person=q_person,
-                                phone=q_phone,
-                                email=q_email,
-                                bot_token=tg_token,
-                                chat_id=tg_chat
-                            )
-
-                        st.success(f"🎉 Xush kelibsiz, {q_person or user_obj['company_name']}! 3 ta bepul audit taqdim etildi.")
-                        time.sleep(0.8)
-                        st.rerun()
-                    else:
-                        st.error(signup_res.get("error", "Xatolik yuz berdi."))
-
-        # TAB 2: TRADITIONAL LOGIN
-        with tab_login:
-            st.caption("Mavjud hisobingiz bo'lsa login va parol orqali kiring:")
-            login_u = st.text_input("Login, Email yoki Telefon", value="", placeholder="demo", key="sb_login_u")
-            login_p = st.text_input("Parol", value="", placeholder="••••••••", type="password", key="sb_login_p")
-            st.caption("💡 *Tizimni sinab ko'rish uchun test hisobi: login `demo` / parol `demo123`*")
-            if st.button("Tizimga kirish", key="btn_login", use_container_width=True):
-                user_record = DatabaseManager.authenticate_user(login_u, login_p)
-                if user_record:
-                    st.session_state["auth_user"] = user_record
-                    st.success("Muvaffaqiyatli kirdingiz!")
-                    time.sleep(0.5)
-                    st.rerun()
-                else:
-                    st.error("Login yoki parol noto'g'ri.")
-
-        # TAB 3: B2B LEADS DATABASE (ADMIN ONLY)
-        if tab_leads is not None and is_admin:
-            with tab_leads:
-                st.caption("Barcha ro'yxatdan o'tgan korxonalar, telefonlar va emaillar bazasi:")
-                leads = DatabaseManager.get_all_leads()
-                st.caption(f"Jami yig'ilgan lidlar: **{len(leads)} ta**")
-                
-                leads_display = []
-                for l in leads:
-                    leads_display.append({
-                        "ID": l.get("id"),
-                        "Kompaniya": l.get("company_name"),
-                        "Mas'ul": l.get("contact_person") or "—",
-                        "Telefon": l.get("phone") or "—",
-                        "Gmail/Email": l.get("email") or "—",
-                        "Tarif": l.get("tier"),
-                        "Kreditlar": l.get("credits_left"),
-                        "Sana": str(l.get("created_at"))[:10]
-                    })
-                st.dataframe(leads_display, use_container_width=True, hide_index=True)
-
-                import csv, io
-                output = io.StringIO()
-                writer = csv.DictWriter(output, fieldnames=["ID", "Kompaniya", "Mas'ul", "Telefon", "Gmail/Email", "Tarif", "Kreditlar", "Sana"])
-                writer.writeheader()
-                writer.writerows(leads_display)
-                st.download_button(
-                    label="📥 Lidlar Bazasini CSV da Yuklab Olish",
-                    data=output.getvalue(),
-                    file_name="tenderpro24_b2b_leads.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-
-        if not is_guest:
-            st.divider()
-            if st.button("🚪 Hisobdan chiqish (Mehmon rejimiga o'tish)", key="btn_logout", use_container_width=True):
-                st.session_state["auth_user"] = {
-                    "id": None,
-                    "username": "mehmon",
-                    "company_name": "Mening Kompaniyam",
-                    "tier": "free",
-                    "credits_left": 3,
-                    "is_guest": True
-                }
-                st.rerun()
-
-    st.divider()
-    st.subheader("🏢 Kompaniya Rekvizitlari")
-    if is_guest:
-        comp_name = st.text_input("Kompaniya nomi", value="", placeholder="masalan: Grand Stroy MCHJ")
-        comp_founder = st.text_input("Mas'ul shaxs", value="", placeholder="Rahbar yoki mutaxassis F.I.SH")
-        comp_desc = st.text_area("Faoliyat sohasi", value="", placeholder="Kompaniyangiz faoliyati va xizmatlari (masalan: Qurilish, IT, Mebel...)", height=60)
-        comp_exp = st.text_input("Tajriba davri", value="3 yil")
-    else:
-        comp_name = st.text_input("Kompaniya nomi", value=current_user.get("company_name", ""))
-        comp_founder = st.text_input("Mas'ul shaxs", value=current_user.get("contact_person") or (DEFAULT_COMPANY_PROFILE["founder"] if current_user["username"] == "demo" else ""))
-        comp_desc = st.text_area("Faoliyat sohasi", value=DEFAULT_COMPANY_PROFILE["description"] if current_user["username"] == "demo" else "Kompaniya xizmat va mahsulotlari", height=60)
-        comp_exp = st.text_input("Tajriba davri", value=DEFAULT_COMPANY_PROFILE["experience_years"] if current_user["username"] == "demo" else "3 yil")
-    
-    st.divider()
-    st.markdown("🌐 **Ulangan Portallar & Sektorlar:**")
-    for portal, info in SUPPORTED_PORTALS.items():
-        desc_text = info.get("name", "") if isinstance(info, dict) else str(info)
-        sec_text = f"({info.get('sector', '')})" if isinstance(info, dict) and info.get("sector") else ""
-        st.caption(f"• **{portal}** — {desc_text}")
+# Company Profile state defaults
+if "comp_name" not in st.session_state:
+    st.session_state["comp_name"] = "" if is_guest else current_user.get("company_name", "")
+if "comp_founder" not in st.session_state:
+    st.session_state["comp_founder"] = "" if is_guest else (current_user.get("contact_person") or DEFAULT_COMPANY_PROFILE["founder"])
+if "comp_desc" not in st.session_state:
+    st.session_state["comp_desc"] = "" if is_guest else DEFAULT_COMPANY_PROFILE["description"]
+if "comp_exp" not in st.session_state:
+    st.session_state["comp_exp"] = "3 yil" if is_guest else DEFAULT_COMPANY_PROFILE["experience_years"]
 
 company_profile = {
-    "name": comp_name.strip() if comp_name.strip() else (current_user.get("company_name") if not is_guest else "Mening Kompaniyam"),
-    "founder": comp_founder.strip() if comp_founder.strip() else "Mas'ul",
-    "description": comp_desc.strip() if comp_desc.strip() else (DEFAULT_COMPANY_PROFILE["description"] if (not is_guest and current_user.get("username") == "demo") else "B2B xizmatlar va savdo"),
-    "experience_years": comp_exp.strip() if comp_exp.strip() else "3+ yil",
+    "name": st.session_state["comp_name"].strip() if st.session_state["comp_name"].strip() else (current_user.get("company_name") if not is_guest else "Mening Kompaniyam"),
+    "founder": st.session_state["comp_founder"].strip() if st.session_state["comp_founder"].strip() else "Mas'ul",
+    "description": st.session_state["comp_desc"].strip() if st.session_state["comp_desc"].strip() else (DEFAULT_COMPANY_PROFILE["description"] if (not is_guest and current_user.get("username") == "demo") else "B2B xizmatlar va savdo"),
+    "experience_years": st.session_state["comp_exp"].strip() if st.session_state["comp_exp"].strip() else "3+ yil",
     "core_services": DEFAULT_COMPANY_PROFILE["core_services"],
     "qualification_highlights": DEFAULT_COMPANY_PROFILE["qualification_highlights"]
 }
 
-# Top SaaS Header Bar
+# =========================================================
+# StepStone.de Style Top Navigation Bar
+# =========================================================
 logo_b64 = ""
 _lp = Path(__file__).resolve().parent / "logo_icon.png"
 if not _lp.exists():
@@ -397,32 +255,170 @@ if _lp.exists():
     import base64
     ext = "png" if _lp.suffix.lower() == ".png" else "jpeg"
     logo_b64 = base64.b64encode(_lp.read_bytes()).decode("utf-8")
-    header_icon_html = f'<img src="data:image/{ext};base64,{logo_b64}" style="width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">'
+    header_icon_html = f'<img src="data:image/{ext};base64,{logo_b64}" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">'
 else:
-    header_icon_html = '<div style="background: #1D4ED8; color: white; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">🛡️</div>'
+    header_icon_html = '<div style="background: #0D1B2A; color: white; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">🛡️</div>'
 
-st.markdown(f"""
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 14px 22px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-    <div style="display: flex; align-items: center; gap: 16px;">
+tier_badge_text = "👑 PRO (Cheksiz)" if current_user["tier"] == "pro" else f"⭐ Bepul ({current_user.get('credits_left', 0)} ta qoldi)"
+account_pill_bg = "#FEF3C7" if is_guest else "#ECFDF5"
+account_pill_color = "#92400E" if is_guest else "#065F46"
+account_display_name = "👤 Mehmon (Sinov Rejimi)" if is_guest else f"🏢 {current_user['company_name']}"
+account_sub_info = f"⭐ {current_user.get('credits_left', 3)} ta bepul audit" if is_guest else f"@{current_user['username']} • {tier_badge_text}"
+
+nav_c1, nav_c2 = st.columns([2.1, 1.9], gap="medium")
+
+with nav_c1:
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; gap: 14px; padding: 4px 0;">
         {header_icon_html}
         <div>
-            <div style="font-size: 1.42rem; font-weight: 800; color: #0F172A; line-height: 1.1; letter-spacing: -0.02em;">
-                TenderPro<span style="color: #F59E0B; font-weight: 900;">²⁴</span> <span style="font-size: 0.72rem; background-color: #0F172A; color: #38BDF8; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid #1E293B; vertical-align: middle; margin-left: 6px;">PROCUREMENT AI</span>
+            <div style="font-size: 1.35rem; font-weight: 800; color: #0D1B2A; line-height: 1.15; letter-spacing: -0.02em;">
+                TenderPro<span style="color: #00C091; font-weight: 900;">²⁴</span> 
+                <span style="font-size: 0.7rem; background-color: #0D1B2A; color: #00C091; font-weight: 700; padding: 2px 8px; border-radius: 6px; vertical-align: middle; margin-left: 6px; letter-spacing: 0.05em;">PROCUREMENT AI</span>
             </div>
-            <div style="font-size: 0.82rem; color: #64748B; font-weight: 500; margin-top: 2px;">O'zbekiston Davlat, BMT/NNT va B2B Tenderlar Portali • GPTify.uz Labs</div>
+            <div style="font-size: 0.8rem; color: #64748B; font-weight: 500; margin-top: 2px;">
+                O'zbekiston Davlat, BMT/NNT va B2B Tenderlar Portali • GPTify.uz Labs
+            </div>
         </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="background: #F0FDF4; color: #166534; font-size: 0.8rem; font-weight: 700; padding: 5px 12px; border-radius: 20px; border: 1px solid #BBF7D0; display: inline-flex; align-items: center; gap: 6px;">
-            <span style="width: 7px; height: 7px; background: #22C55E; border-radius: 50%; display: inline-block;"></span>
+    """, unsafe_allow_html=True)
+
+with nav_c2:
+    st.markdown(f"""
+    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; height: 100%; padding: 4px 0;">
+        <span style="background: #F0FDF4; color: #166534; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 20px; border: 1px solid #BBF7D0; display: inline-flex; align-items: center; gap: 6px;">
+            <span style="width: 7px; height: 7px; background: #00C091; border-radius: 50%; display: inline-block;"></span>
             24/7 Radar: Faol
         </span>
-        <span style="background: #F8FAFC; color: #334155; font-size: 0.8rem; font-weight: 600; padding: 5px 12px; border-radius: 20px; border: 1px solid #E2E8F0;">
-            🇺🇿 UzEx • UNGM • Banklar
+        <span style="background: {account_pill_bg}; color: {account_pill_color}; font-size: 0.8rem; font-weight: 700; padding: 5px 12px; border-radius: 20px; border: 1px solid {account_pill_color}30;">
+            {account_display_name} ({account_sub_info})
         </span>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+# StepStone Account & Quick-Access Drawer
+acc_title = "🎁 1-Bosishda Kirish / Ro'yxatdan O'tish (3 ta bepul audit)" if is_guest else f"⚙️ Profil, Sozlamalar va Lidlar (@{current_user['username']})"
+with st.expander(acc_title, expanded=False):
+    if is_admin:
+        t_quick, t_login, t_comp, t_leads = st.tabs(["⚡ 1-Bosishda Ro'yxatdan O'tish", "🔑 Login & Parol", "🏢 Kompaniya Rekvizitlari", "📊 B2B Lidlar"])
+    else:
+        t_quick, t_login, t_comp = st.tabs(["⚡ 1-Bosishda Ro'yxatdan O'tish", "🔑 Login & Parol", "🏢 Kompaniya Rekvizitlari"])
+        t_leads = None
+
+    with t_quick:
+        st.caption("Telefon raqamingiz yoki Gmailingizni qoldiring va 3 ta to'liq AI audit oling:")
+        cq1, cq2 = st.columns(2)
+        with cq1:
+            q_comp = st.text_input("🏢 Tashkilot / Kompaniya nomi", placeholder="masalan: Grand Stroy MCHJ", key="top_q_comp")
+            q_person = st.text_input("👤 Mas'ul shaxs (F.I.SH)", placeholder="masalan: Jasur Rahimov", key="top_q_person")
+        with cq2:
+            q_phone = st.text_input("📞 Telefon raqami", placeholder="+998 90 123 45 67", key="top_q_phone")
+            q_email = st.text_input("📧 Gmail / Elektron pochta", placeholder="masalan: jasur@gmail.com", key="top_q_email")
+
+        if st.button("🎁 3 ta Bepul Audit Bilan Boshlash", key="top_btn_quick_reg", type="primary", use_container_width=True):
+            if not q_phone.strip() and not q_email.strip():
+                st.warning("Iltimos, telefon raqamingiz yoki Gmail manzilingizni kiriting.")
+            else:
+                signup_res = DatabaseManager.quick_signup(
+                    phone=q_phone,
+                    email=q_email,
+                    company_name=q_comp,
+                    contact_person=q_person
+                )
+                if signup_res.get("success"):
+                    user_obj = signup_res.get("user")
+                    st.session_state["auth_user"] = user_obj
+                    if q_comp:
+                        st.session_state["comp_name"] = q_comp
+                    if q_person:
+                        st.session_state["comp_founder"] = q_person
+
+                    # Instant Lead Alert via Telegram
+                    TenderNotifier.send_lead_registration_alert(
+                        company_name=q_comp or user_obj.get("company_name", "Kompaniya"),
+                        contact_person=q_person,
+                        phone=q_phone,
+                        email=q_email
+                    )
+                    st.success(f"🎉 Xush kelibsiz, {q_person or user_obj['company_name']}! 3 ta bepul audit taqdim etildi.")
+                    time.sleep(0.6)
+                    st.rerun()
+                else:
+                    st.error(signup_res.get("error", "Xatolik yuz berdi."))
+
+    with t_login:
+        st.caption("Mavjud hisobingiz bo'lsa login va parol orqali kiring:")
+        cl1, cl2 = st.columns(2)
+        with cl1:
+            login_u = st.text_input("Login, Email yoki Telefon", value="", placeholder="demo", key="top_login_u")
+        with cl2:
+            login_p = st.text_input("Parol", value="", placeholder="••••••••", type="password", key="top_login_p")
+        st.caption("💡 *Tizimni to'liq ko'rish uchun sinov hisobi: login `demo` / parol `demo123`*")
+        if st.button("Tizimga kirish", key="top_btn_login", use_container_width=True):
+            user_record = DatabaseManager.authenticate_user(login_u, login_p)
+            if user_record:
+                st.session_state["auth_user"] = user_record
+                st.success("Muvaffaqiyatli kirdingiz!")
+                time.sleep(0.5)
+                st.rerun()
+            else:
+                st.error("Login yoki parol noto'g'ri.")
+
+    with t_comp:
+        st.caption("Tender tahlili va taklif xati (.docx) generatsiyasida ishlatiladigan korxona ma'lumotlari:")
+        cp1, cp2 = st.columns(2)
+        with cp1:
+            st.session_state["comp_name"] = st.text_input("Kompaniya nomi", value=st.session_state["comp_name"], placeholder="masalan: Grand Stroy MCHJ", key="f_comp_name")
+            st.session_state["comp_founder"] = st.text_input("Mas'ul shaxs", value=st.session_state["comp_founder"], placeholder="Rahbar yoki mutaxassis F.I.SH", key="f_comp_founder")
+        with cp2:
+            st.session_state["comp_exp"] = st.text_input("Tajriba davri", value=st.session_state["comp_exp"], placeholder="masalan: 3+ yil", key="f_comp_exp")
+            st.session_state["comp_desc"] = st.text_input("Faoliyat sohasi", value=st.session_state["comp_desc"], placeholder="Qurilish, IT, Mebel, Ta'minot...", key="f_comp_desc")
+
+    if t_leads is not None and is_admin:
+        with t_leads:
+            st.caption("Barcha ro'yxatdan o'tgan korxonalar, telefonlar va emaillar bazasi:")
+            leads = DatabaseManager.get_all_leads()
+            st.caption(f"Jami yig'ilgan lidlar: **{len(leads)} ta**")
+            leads_display = []
+            for l in leads:
+                leads_display.append({
+                    "ID": l.get("id"),
+                    "Kompaniya": l.get("company_name"),
+                    "Mas'ul": l.get("contact_person") or "—",
+                    "Telefon": l.get("phone") or "—",
+                    "Gmail/Email": l.get("email") or "—",
+                    "Tarif": l.get("tier"),
+                    "Kreditlar": l.get("credits_left"),
+                    "Sana": str(l.get("created_at"))[:10]
+                })
+            st.dataframe(leads_display, use_container_width=True, hide_index=True)
+            import csv, io
+            output = io.StringIO()
+            writer = csv.DictWriter(output, fieldnames=["ID", "Kompaniya", "Mas'ul", "Telefon", "Gmail/Email", "Tarif", "Kreditlar", "Sana"])
+            writer.writeheader()
+            writer.writerows(leads_display)
+            st.download_button(
+                label="📥 Lidlar Bazasini CSV da Yuklab Olish",
+                data=output.getvalue(),
+                file_name="tenderpro24_b2b_leads.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+
+    if not is_guest:
+        st.divider()
+        if st.button("🚪 Hisobdan chiqish (Mehmon rejimiga o'tish)", key="btn_logout_top", use_container_width=True):
+            st.session_state["auth_user"] = {
+                "id": None,
+                "username": "mehmon",
+                "company_name": "Mening Kompaniyam",
+                "tier": "free",
+                "credits_left": 3,
+                "is_guest": True
+            }
+            st.rerun()
+
+st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
 # Clean, Native Streamlit Tabs
 tab_radar, tab_audit, tab_docs, tab_telegram, tab_pricing, tab_guide = st.tabs([
@@ -563,7 +559,7 @@ with tab_radar:
 
         selected_lot = next((l for l in lots if l["lot_id"] == active_lot_id), lots[0])
 
-        col_list, col_detail = st.columns([1.1, 1.45], gap="medium")
+        col_list, col_detail = st.columns([1.12, 1.48], gap="large")
 
         # LEFT COLUMN: StepStone-style scrollable cards list
         with col_list:
@@ -572,20 +568,21 @@ with tab_radar:
                 score = opp.get("match_score", 50)
                 opp_sec = opp.get("sector", "Davlat sektori")
 
-                card_border = "2px solid #2563EB" if is_selected else "1px solid #E2E8F0"
-                card_bg = "#EFF6FF" if is_selected else "#FFFFFF"
+                card_border = "1px solid #00C091; border-left: 5px solid #00C091" if is_selected else "1px solid #E2E8F0; border-left: 5px solid transparent"
+                card_bg = "#F0FDF9" if is_selected else "#FFFFFF"
+                card_shadow = "0 4px 12px rgba(0, 192, 145, 0.08)" if is_selected else "0 1px 3px rgba(0,0,0,0.03)"
                 initials = "UZ" if "uzex" in opp.get("portal", "").lower() else ("UN" if "ungm" in opp.get("portal", "").lower() or "bmt" in opp_sec.lower() else "B2B")
-                avatar_bg = "#1D4ED8" if initials == "UZ" else ("#7C3AED" if initials == "UN" else "#0D9488")
+                avatar_bg = "#0B192C" if initials == "UZ" else ("#581C87" if initials == "UN" else "#065F46")
 
                 st.markdown(f"""
-                <div style="background-color: {card_bg}; border: {card_border}; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                <div style="background-color: {card_bg}; border: {card_border}; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; box-shadow: {card_shadow}; transition: all 0.2s ease;">
                     <div style="display: flex; align-items: flex-start; gap: 12px;">
-                        <div style="background-color: {avatar_bg}; color: white; font-weight: 800; font-size: 0.8rem; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <div style="background-color: {avatar_bg}; color: white; font-weight: 800; font-size: 0.8rem; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                             {initials}
                         </div>
                         <div style="flex-grow: 1;">
-                            <div style="font-size: 0.95rem; font-weight: 700; color: #0F172A; line-height: 1.3; margin-bottom: 4px;">
-                                {opp['title'][:80] + ('...' if len(opp['title']) > 80 else '')}
+                            <div style="font-size: 0.95rem; font-weight: 700; color: #0F172A; line-height: 1.35; margin-bottom: 4px;">
+                                {opp['title'][:85] + ('...' if len(opp['title']) > 85 else '')}
                             </div>
                             <div style="font-size: 0.8rem; color: #64748B; margin-bottom: 8px;">
                                 🏛 {opp['customer'][:45]} • <span style="color: #0284C7; font-weight: 600;">{opp['portal']}</span>
@@ -606,7 +603,8 @@ with tab_radar:
                 c_sel1, c_sel2 = st.columns([1.5, 1])
                 with c_sel1:
                     btn_label = "✅ Tanlangan" if is_selected else "Tafsilotlar 👉"
-                    if st.button(btn_label, key=f"sel_{sector_name}_{opp['lot_id']}", use_container_width=True):
+                    btn_type = "primary" if is_selected else "secondary"
+                    if st.button(btn_label, key=f"sel_{sector_name}_{opp['lot_id']}", type=btn_type, use_container_width=True):
                         st.session_state["selected_lot_id"] = opp["lot_id"]
                         st.rerun()
                 with c_sel2:
