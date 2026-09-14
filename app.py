@@ -520,7 +520,7 @@ with tab_radar:
                     d_act1, d_act2 = st.columns([1.6, 1])
                     with d_act1:
                         full_lot_text = f"TENDER / LOT: {selected_lot['lot_id']}\nBUYURTMACHI: {selected_lot['customer']}\nMAVZU: {selected_lot['title']}\nPORTAL: {selected_lot['portal']}\nSEKTOR: {sel_sec}\nBOSHLANG'ICH NARX: {selected_lot['starting_price']}\nMUDDAT: {selected_lot.get('deadline', 'Noma\'lum')}\n\nTAVSIF VA TALABLAR:\n{selected_lot['description']}\n\nMALAKA TALABLARI:\n{selected_lot.get('qualification_brief', 'Standart malaka talablari')}"
-                        if st.button("⚡ 1-Bosishda AI Audit & Taklif Tayyorlash", key=f"dossier_audit_{selected_lot['lot_id']}", type="primary", use_container_width=True):
+                        if st.button("⚡ 1-Bosishda AI Audit & Taklif Tayyorlash", key=f"dossier_audit_{sector_name}_{selected_lot['lot_id']}", type="primary", use_container_width=True):
                             st.session_state["tender_text"] = full_lot_text
                             st.session_state["current_tender_link"] = selected_lot.get("link", "")
                             st.session_state["selected_lot_title"] = selected_lot['title']
