@@ -216,9 +216,53 @@ with st.sidebar:
     expander_title = "🔑 Kirish yoki Ro'yxatdan o'tish" if is_demo else f"⚙️ Hisob: @{current_user['username']} (Almashtirish)"
     
     with st.expander(expander_title, expanded=False):
-        tab_login, tab_reg = st.tabs(["Kirish", "Yangi Hisob"])
+        tab_quick, tab_login, tab_leads = st.tabs(["⚡ Tezkor Kirish", "🔑 Login & Parol", "📊 B2B Lidlar"])
+        
+        # TAB 1: QUICK SIGNUP VIA GMAIL OR PHONE
+        with tab_quick:
+            st.caption("Telefon yoki Gmail orqali 1-bosishda 3 ta bepul AI audit oling:")
+            q_comp = st.text_input("🏢 Tashkilot / Kompaniya nomi", placeholder="masalan: Grand Stroy MCHJ", key="q_comp")
+            q_person = st.text_input("👤 Mas'ul shaxs (F.I.SH)", placeholder="masalan: Jasur Rahimov", key="q_person")
+            q_phone = st.text_input("📞 Telefon raqami", placeholder="+998 90 123 45 67", key="q_phone")
+            q_email = st.text_input("📧 Gmail / Elektron pochta", placeholder="masalan: jasur@gmail.com", key="q_email")
+
+            if st.button("🎁 3 ta Bepul Audit Bilan Boshlash", key="btn_quick_reg", type="primary", use_container_width=True):
+                if not q_phone.strip() and not q_email.strip():
+                    st.warning("Iltimos, telefon raqamingiz yoki Gmail manzilingizni kiriting.")
+                else:
+                    signup_res = DatabaseManager.quick_signup(
+                        phone=q_phone,
+                        email=q_email,
+                        company_name=q_comp,
+                        contact_person=q_person
+                    )
+                    if signup_res.get("success"):
+                        user_obj = signup_res.get("user")
+                        st.session_state["auth_user"] = user_obj
+
+                        # Send real-time lead alert to Shukhrat's Telegram
+                        import os
+                        tg_token = os.getenv("TENDER_BOT_TOKEN")
+                        tg_chat = os.getenv("TENDER_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID")
+                        if tg_token and tg_chat:
+                            TenderNotifier.send_lead_registration_alert(
+                                company_name=q_comp or user_obj.get("company_name", "Kompaniya"),
+                                contact_person=q_person,
+                                phone=q_phone,
+                                email=q_email,
+                                bot_token=tg_token,
+                                chat_id=tg_chat
+                            )
+
+                        st.success(f"🎉 Xush kelibsiz, {q_person or user_obj['company_name']}! 3 ta bepul audit taqdim etildi.")
+                        time.sleep(0.8)
+                        st.rerun()
+                    else:
+                        st.error(signup_res.get("error", "Xatolik yuz berdi."))
+
+        # TAB 2: TRADITIONAL LOGIN
         with tab_login:
-            login_u = st.text_input("Login", value="demo", key="sb_login_u")
+            login_u = st.text_input("Login, Email yoki Telefon", value="demo", key="sb_login_u")
             login_p = st.text_input("Parol", value="demo123", type="password", key="sb_login_p")
             if st.button("Tizimga kirish", key="btn_login", use_container_width=True):
                 user_record = DatabaseManager.authenticate_user(login_u, login_p)
@@ -229,27 +273,43 @@ with st.sidebar:
                     st.rerun()
                 else:
                     st.error("Login yoki parol noto'g'ri.")
-        with tab_reg:
-            reg_u = st.text_input("Yangi login", key="sb_reg_u", placeholder="masalan: akmal_biznes")
-            reg_p = st.text_input("Yangi parol", type="password", key="sb_reg_p", placeholder="Kamida 4 ta belgi")
-            reg_comp = st.text_input("Kompaniya nomi", key="sb_reg_c", placeholder="masalan: Grand Tech MCHJ")
-            if st.button("🚀 3 ta bepul audit bilan ro'yxatdan o'tish", key="btn_reg", type="primary", use_container_width=True):
-                if not reg_u.strip() or not reg_p.strip():
-                    st.warning("Iltimos, login va parolni kiriting.")
-                else:
-                    reg_res = DatabaseManager.register_user(reg_u, reg_p, reg_comp)
-                    if reg_res.get("success"):
-                        user_record = DatabaseManager.authenticate_user(reg_u, reg_p)
-                        if user_record:
-                            st.session_state["auth_user"] = user_record
-                            st.success(f"🎉 Xush kelibsiz, @{reg_u}! 3 ta bepul audit taqdim etildi.")
-                            time.sleep(0.8)
-                            st.rerun()
-                        else:
-                            st.success("Hisob yaratildi! Endi 'Kirish' tabidan kiring.")
-                    else:
-                        st.error(reg_res.get("error"))
-        
+
+        # TAB 3: B2B LEADS DATABASE (ADMIN / BUSINESS VIEW)
+        with tab_leads:
+            if is_demo or current_user["username"] in ["demo", "admin", "shukhrat"]:
+                st.caption("Barcha ro'yxatdan o'tgan korxonalar, telefonlar va emaillar bazasi:")
+                leads = DatabaseManager.get_all_leads()
+                st.caption(f"Jami yig'ilgan lidlar: **{len(leads)} ta**")
+                
+                leads_display = []
+                for l in leads:
+                    leads_display.append({
+                        "ID": l.get("id"),
+                        "Kompaniya": l.get("company_name"),
+                        "Mas'ul": l.get("contact_person") or "—",
+                        "Telefon": l.get("phone") or "—",
+                        "Gmail/Email": l.get("email") or "—",
+                        "Tarif": l.get("tier"),
+                        "Kreditlar": l.get("credits_left"),
+                        "Sana": str(l.get("created_at"))[:10]
+                    })
+                st.dataframe(leads_display, use_container_width=True, hide_index=True)
+
+                import csv, io
+                output = io.StringIO()
+                writer = csv.DictWriter(output, fieldnames=["ID", "Kompaniya", "Mas'ul", "Telefon", "Gmail/Email", "Tarif", "Kreditlar", "Sana"])
+                writer.writeheader()
+                writer.writerows(leads_display)
+                st.download_button(
+                    label="📥 Lidlar Bazasini CSV da Yuklab Olish",
+                    data=output.getvalue(),
+                    file_name="tenderpro24_b2b_leads.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            else:
+                st.info("Ushbu bo'lim faqat boshqaruvchi (admin) uchun ochiq.")
+
         if not is_demo:
             st.divider()
             if st.button("🚪 Demo hisobga qaytish (Chiqish)", key="btn_logout", use_container_width=True):

@@ -31,10 +31,23 @@ class DatabaseManager:
                 company_name TEXT NOT NULL,
                 tier TEXT DEFAULT 'free',
                 credits_left INTEGER DEFAULT 3,
+                phone TEXT,
+                email TEXT,
+                contact_person TEXT,
                 telegram_chat_id TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """)
+
+            # Ensure columns exist if table was already created
+            cursor.execute("PRAGMA table_info(users)")
+            cols = [row["name"] for row in cursor.fetchall()]
+            if "phone" not in cols:
+                cursor.execute("ALTER TABLE users ADD COLUMN phone TEXT")
+            if "email" not in cols:
+                cursor.execute("ALTER TABLE users ADD COLUMN email TEXT")
+            if "contact_person" not in cols:
+                cursor.execute("ALTER TABLE users ADD COLUMN contact_person TEXT")
 
             # Audit history table
             cursor.execute("""
@@ -118,7 +131,7 @@ class DatabaseManager:
         return None
 
     @classmethod
-    def register_user(cls, username: str, password: str, company_name: str) -> Dict[str, Any]:
+    def register_user(cls, username: str, password: str, company_name: str, phone: str = "", email: str = "", contact_person: str = "") -> Dict[str, Any]:
         """Registers a new user with 3 free audit credits."""
         if not username.strip() or not password.strip():
             return {"success": False, "error": "Foydalanuvchi nomi va parol kiritilishi shart."}
@@ -128,13 +141,101 @@ class DatabaseManager:
             cursor = conn.cursor()
             try:
                 cursor.execute("""
-                INSERT INTO users (username, password_hash, company_name, tier, credits_left)
-                VALUES (?, ?, ?, 'free', 3)
-                """, (username.strip(), pwd_hash, company_name.strip() or "Mening Kompaniyam"))
+                INSERT INTO users (username, password_hash, company_name, tier, credits_left, phone, email, contact_person)
+                VALUES (?, ?, ?, 'free', 3, ?, ?, ?)
+                """, (username.strip(), pwd_hash, company_name.strip() or "Mening Kompaniyam", phone.strip(), email.strip(), contact_person.strip()))
                 conn.commit()
                 return {"success": True}
             except sqlite3.IntegrityError:
                 return {"success": False, "error": "Ushbu foydalanuvchi nomi band. Boshqa nom tanlang."}
+
+    @classmethod
+    def quick_signup(
+        cls,
+        phone: str = "",
+        email: str = "",
+        company_name: str = "",
+        contact_person: str = "",
+        password: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Fast 1-click B2B lead signup using Phone or Gmail/Email. Grants 3 free audit credits."""
+        clean_phone = (phone or "").strip()
+        clean_email = (email or "").strip().lower()
+        clean_comp = (company_name or "").strip() or "Mening Kompaniyam MCHJ"
+        clean_person = (contact_person or "").strip()
+
+        if not clean_phone and not clean_email:
+            return {"success": False, "error": "Iltimos, telefon raqamingiz yoki Gmail manzilingizni kiriting."}
+
+        # Derive username from email or phone
+        if clean_email:
+            username = clean_email.split("@")[0].replace(".", "_")
+        else:
+            username = "u_" + clean_phone.replace("+", "").replace(" ", "").replace("-", "")[-9:]
+
+        raw_pwd = password or "tender24"
+        pwd_hash = cls._hash_password(raw_pwd)
+
+        with cls.get_connection() as conn:
+            cursor = conn.cursor()
+            # Check if user with this phone or email already exists
+            cursor.execute("""
+            SELECT id, username, company_name, tier, credits_left, phone, email, contact_person, created_at 
+            FROM users 
+            WHERE (phone != '' AND phone = ?) OR (email != '' AND email = ?) OR username = ?
+            """, (clean_phone, clean_email, username))
+            existing = cursor.fetchone()
+            if existing:
+                # Update existing user's missing info
+                cursor.execute("""
+                UPDATE users SET 
+                    company_name = CASE WHEN company_name = 'Mening Kompaniyam' OR company_name = '' THEN ? ELSE company_name END,
+                    contact_person = CASE WHEN contact_person IS NULL OR contact_person = '' THEN ? ELSE contact_person END,
+                    phone = CASE WHEN phone IS NULL OR phone = '' THEN ? ELSE phone END,
+                    email = CASE WHEN email IS NULL OR email = '' THEN ? ELSE email END
+                WHERE id = ?
+                """, (clean_comp, clean_person, clean_phone, clean_email, existing["id"]))
+                conn.commit()
+                cursor.execute("SELECT * FROM users WHERE id = ?", (existing["id"],))
+                updated = cursor.fetchone()
+                return {"success": True, "user": dict(updated), "is_new": False}
+
+            # If brand new lead, insert
+            try:
+                cursor.execute("""
+                INSERT INTO users (username, password_hash, company_name, tier, credits_left, phone, email, contact_person)
+                VALUES (?, ?, ?, 'free', 3, ?, ?, ?)
+                """, (username, pwd_hash, clean_comp, clean_phone, clean_email, clean_person))
+                conn.commit()
+                new_id = cursor.lastrowid
+                cursor.execute("SELECT * FROM users WHERE id = ?", (new_id,))
+                new_user = cursor.fetchone()
+                return {"success": True, "user": dict(new_user), "is_new": True}
+            except sqlite3.IntegrityError:
+                # Username collision fallback
+                import random
+                username_alt = f"{username}_{random.randint(100, 999)}"
+                cursor.execute("""
+                INSERT INTO users (username, password_hash, company_name, tier, credits_left, phone, email, contact_person)
+                VALUES (?, ?, ?, 'free', 3, ?, ?, ?)
+                """, (username_alt, pwd_hash, clean_comp, clean_phone, clean_email, clean_person))
+                conn.commit()
+                new_id = cursor.lastrowid
+                cursor.execute("SELECT * FROM users WHERE id = ?", (new_id,))
+                new_user = cursor.fetchone()
+                return {"success": True, "user": dict(new_user), "is_new": True}
+
+    @classmethod
+    def get_all_leads(cls) -> List[Dict[str, Any]]:
+        """Retrieves all registered client companies, phone numbers, and emails for B2B CRM analytics."""
+        with cls.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+            SELECT id, username, company_name, contact_person, phone, email, tier, credits_left, created_at
+            FROM users
+            ORDER BY id DESC
+            """)
+            return [dict(r) for r in cursor.fetchall()]
 
     @classmethod
     def use_audit_credit(cls, username: str) -> bool:

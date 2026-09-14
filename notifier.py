@@ -143,3 +143,45 @@ class TenderNotifier:
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": f"Email yuborishda xatolik: {str(e)}"}
+
+    @staticmethod
+    def send_lead_registration_alert(
+        company_name: str,
+        contact_person: str,
+        phone: str,
+        email: str,
+        bot_token: Optional[str] = None,
+        chat_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Sends an instant lead alert to the admin Telegram when a company registers with Phone or Gmail."""
+        token = (bot_token or os.getenv("TENDER_BOT_TOKEN", "")).strip()
+        target_chat = (chat_id or os.getenv("TENDER_CHAT_ID", "") or os.getenv("TELEGRAM_CHAT_ID", "")).strip()
+
+        if not token or not target_chat:
+            return {"success": False, "error": "Bot token or chat_id not set"}
+
+        message = (
+            f"🔔 <b>YANGI B2B LID / RO'YXATDAN O'TISH:</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━\n"
+            f"🏢 <b>Tashkilot:</b> <b>{company_name}</b>\n"
+            f"👤 <b>Mas'ul shaxs:</b> {contact_person or 'Kiritilmagan'}\n"
+            f"📞 <b>Telefon:</b> <code>{phone or 'Kiritilmagan'}</code>\n"
+            f"📧 <b>Gmail / Email:</b> <code>{email or 'Kiritilmagan'}</code>\n"
+            f"🎁 <b>Status:</b> 3 ta bepul AI audit taqdim etildi\n"
+            f"━━━━━━━━━━━━━━━━━━━\n"
+            f"⚡ <i>TenderPro²⁴ B2B CRM bazasiga saqlandi</i>"
+        )
+
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        payload = {
+            "chat_id": target_chat,
+            "text": message,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True
+        }
+
+        try:
+            resp = requests.post(url, json=payload, timeout=8)
+            return {"success": resp.status_code == 200, "status_code": resp.status_code}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
