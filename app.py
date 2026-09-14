@@ -173,6 +173,12 @@ Mavzu: "Davlat organlari uchun yagona avtomatlashtirilgan sun'iy intellekt CRM v
 
 # Sidebar Configuration: User Authentication & Company Profile
 with st.sidebar:
+    logo_file = Path(__file__).resolve().parent / "logo.jpg"
+    if not logo_file.exists():
+        logo_file = Path("logo.jpg")
+    if logo_file.exists():
+        st.image(str(logo_file), use_container_width=True)
+    
     st.header("👤 Foydalanuvchi & Profil")
     
     # Initialize or refresh session user from DB
@@ -251,12 +257,20 @@ company_profile = {
 }
 
 # Top SaaS Header Bar
-st.markdown("""
+logo_b64 = ""
+_lp = Path(__file__).resolve().parent / "logo.jpg"
+if not _lp.exists():
+    _lp = Path("logo.jpg")
+if _lp.exists():
+    import base64
+    logo_b64 = base64.b64encode(_lp.read_bytes()).decode("utf-8")
+
+header_icon_html = f'<img src="data:image/jpeg;base64,{logo_b64}" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">' if logo_b64 else '<div style="background: #2563EB; color: white; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">⚖️</div>'
+
+st.markdown(f"""
 <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-    <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="background: #2563EB; color: white; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-            ⚖️
-        </div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+        {header_icon_html}
         <div>
             <div style="font-size: 1.35rem; font-weight: 900; color: #0F172A; line-height: 1.1; letter-spacing: -0.02em;">
                 TenderPro<span style="color: #2563EB;">²⁴</span> <span style="font-size: 0.72rem; background-color: #0F172A; color: #38BDF8; font-weight: 700; padding: 2px 8px; border-radius: 8px; border: 1px solid #1E293B; vertical-align: middle;">AI SUITE</span>
