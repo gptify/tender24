@@ -16,8 +16,8 @@ class TenderNotifier:
         chat_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Sends a rich, actionable alert to a Telegram user or channel."""
-        token = (bot_token or os.getenv("TENDER_BOT_TOKEN", "") or os.getenv("MASTER_BOT_TOKEN", "") or os.getenv("TELEGRAM_BOT_TOKEN", "")).strip()
-        target_chat = (chat_id or os.getenv("TELEGRAM_ADMIN_CHAT_ID", "") or os.getenv("TELEGRAM_CHAT_ID", "")).strip()
+        token = (bot_token or os.getenv("TENDER_BOT_TOKEN", "")).strip()
+        target_chat = (chat_id or os.getenv("TENDER_CHAT_ID", "") or os.getenv("TELEGRAM_CHAT_ID", "")).strip()
 
         if not token or not target_chat:
             return {
