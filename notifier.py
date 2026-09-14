@@ -4,6 +4,9 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict, Any, Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class TenderNotifier:
     """Handles real-time instant notifications via Telegram Bot and Email 
