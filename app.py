@@ -184,39 +184,58 @@ with st.sidebar:
     
     st.header("👤 Foydalanuvchi & Profil")
     
-    # Initialize or refresh session user from DB
+    # Initialize session user: ANY NEW VISITOR STARTS AS ANONYMOUS GUEST (Sinov rejimi)
     if "auth_user" not in st.session_state:
-        user_rec = DatabaseManager.get_user("demo")
-        if user_rec:
-            st.session_state["auth_user"] = user_rec
-        else:
-            st.session_state["auth_user"] = {
-                "username": "demo",
-                "company_name": DEFAULT_COMPANY_PROFILE["name"],
-                "tier": "pro",
-                "credits_left": 999
-            }
+        st.session_state["auth_user"] = {
+            "id": None,
+            "username": "mehmon",
+            "company_name": "Mening Kompaniyam",
+            "tier": "free",
+            "credits_left": 3,
+            "is_guest": True
+        }
     else:
-        refreshed = DatabaseManager.get_user(st.session_state["auth_user"]["username"])
-        if refreshed:
-            st.session_state["auth_user"] = refreshed
+        # If logged in as registered user, refresh from DB
+        if not st.session_state["auth_user"].get("is_guest"):
+            refreshed = DatabaseManager.get_user(st.session_state["auth_user"]["username"])
+            if refreshed:
+                st.session_state["auth_user"] = refreshed
 
     current_user = st.session_state["auth_user"]
-    tier_badge = "👑 PRO (Cheksiz)" if current_user["tier"] == "pro" else f"⭐ Bepul ({current_user['credits_left']} ta qoldi)"
+    is_guest = current_user.get("is_guest", False)
+    is_admin = (not is_guest) and (current_user.get("username") in ["demo", "admin", "shukhrat"])
     
-    st.markdown(f"""
-    <div style="background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-        <div style="font-weight: 700; color: #1E3A8A; font-size: 1rem;">{current_user['company_name']}</div>
-        <div style="font-size: 0.84rem; color: #64748B;">Login: <strong>@{current_user['username']}</strong></div>
-        <div style="font-size: 0.86rem; color: #16A34A; font-weight: 700; margin-top: 4px;">Tarif: {tier_badge}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    if is_guest:
+        tier_badge = f"⭐ Bepul Sinov ({current_user.get('credits_left', 3)} ta audit mavjud)"
+        st.markdown(f"""
+        <div style="background-color: #F8FAFC; border: 1.5px dashed #94A3B8; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; color: #0F172A; font-size: 0.95rem;">👤 Mehmon (Sinov Rejimi)</span>
+                <span style="background: #FEF3C7; color: #D97706; font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 1px solid #FDE68A;">Sinov</span>
+            </div>
+            <div style="font-size: 0.8rem; color: #64748B; margin-top: 3px;">Ro'yxatdan o'tmagan tashrif buyuruvchi</div>
+            <div style="font-size: 0.84rem; color: #0284C7; font-weight: 700; margin-top: 5px;">Balans: {tier_badge}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        tier_badge = "👑 PRO (Cheksiz)" if current_user["tier"] == "pro" else f"⭐ Bepul ({current_user.get('credits_left', 0)} ta qoldi)"
+        st.markdown(f"""
+        <div style="background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="font-weight: 700; color: #1E3A8A; font-size: 1rem;">{current_user['company_name']}</div>
+            <div style="font-size: 0.84rem; color: #64748B;">Login: <strong>@{current_user['username']}</strong></div>
+            <div style="font-size: 0.86rem; color: #16A34A; font-weight: 700; margin-top: 4px;">Tarif: {tier_badge}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    is_demo = (current_user["username"] == "demo")
-    expander_title = "🔑 Kirish yoki Ro'yxatdan o'tish" if is_demo else f"⚙️ Hisob: @{current_user['username']} (Almashtirish)"
+    expander_title = "🎁 Ro'yxatdan o'tish yoki Kirish" if is_guest else f"⚙️ Hisob: @{current_user['username']} (Almashtirish / Chiqish)"
+    expander_default_open = is_guest
     
-    with st.expander(expander_title, expanded=False):
-        tab_quick, tab_login, tab_leads = st.tabs(["⚡ Tezkor Kirish", "🔑 Login & Parol", "📊 B2B Lidlar"])
+    with st.expander(expander_title, expanded=expander_default_open):
+        if is_admin:
+            tab_quick, tab_login, tab_leads = st.tabs(["⚡ Tezkor Kirish", "🔑 Login & Parol", "📊 B2B Lidlar"])
+        else:
+            tab_quick, tab_login = st.tabs(["⚡ Tezkor Kirish", "🔑 Login & Parol"])
+            tab_leads = None
         
         # TAB 1: QUICK SIGNUP VIA GMAIL OR PHONE
         with tab_quick:
@@ -262,8 +281,10 @@ with st.sidebar:
 
         # TAB 2: TRADITIONAL LOGIN
         with tab_login:
-            login_u = st.text_input("Login, Email yoki Telefon", value="demo", key="sb_login_u")
-            login_p = st.text_input("Parol", value="demo123", type="password", key="sb_login_p")
+            st.caption("Mavjud hisobingiz bo'lsa login va parol orqali kiring:")
+            login_u = st.text_input("Login, Email yoki Telefon", value="", placeholder="demo", key="sb_login_u")
+            login_p = st.text_input("Parol", value="", placeholder="••••••••", type="password", key="sb_login_p")
+            st.caption("💡 *Tizimni sinab ko'rish uchun test hisobi: login `demo` / parol `demo123`*")
             if st.button("Tizimga kirish", key="btn_login", use_container_width=True):
                 user_record = DatabaseManager.authenticate_user(login_u, login_p)
                 if user_record:
@@ -274,9 +295,9 @@ with st.sidebar:
                 else:
                     st.error("Login yoki parol noto'g'ri.")
 
-        # TAB 3: B2B LEADS DATABASE (ADMIN / BUSINESS VIEW)
-        with tab_leads:
-            if is_demo or current_user["username"] in ["demo", "admin", "shukhrat"]:
+        # TAB 3: B2B LEADS DATABASE (ADMIN ONLY)
+        if tab_leads is not None and is_admin:
+            with tab_leads:
                 st.caption("Barcha ro'yxatdan o'tgan korxonalar, telefonlar va emaillar bazasi:")
                 leads = DatabaseManager.get_all_leads()
                 st.caption(f"Jami yig'ilgan lidlar: **{len(leads)} ta**")
@@ -307,27 +328,32 @@ with st.sidebar:
                     mime="text/csv",
                     use_container_width=True
                 )
-            else:
-                st.info("Ushbu bo'lim faqat boshqaruvchi (admin) uchun ochiq.")
 
-        if not is_demo:
+        if not is_guest:
             st.divider()
-            if st.button("🚪 Demo hisobga qaytish (Chiqish)", key="btn_logout", use_container_width=True):
-                user_rec = DatabaseManager.get_user("demo")
-                st.session_state["auth_user"] = user_rec or {
-                    "username": "demo",
-                    "company_name": DEFAULT_COMPANY_PROFILE["name"],
-                    "tier": "pro",
-                    "credits_left": 999
+            if st.button("🚪 Hisobdan chiqish (Mehmon rejimiga o'tish)", key="btn_logout", use_container_width=True):
+                st.session_state["auth_user"] = {
+                    "id": None,
+                    "username": "mehmon",
+                    "company_name": "Mening Kompaniyam",
+                    "tier": "free",
+                    "credits_left": 3,
+                    "is_guest": True
                 }
                 st.rerun()
 
     st.divider()
     st.subheader("🏢 Kompaniya Rekvizitlari")
-    comp_name = st.text_input("Kompaniya nomi", value=current_user["company_name"])
-    comp_founder = st.text_input("Mas'ul shaxs", value=DEFAULT_COMPANY_PROFILE["founder"])
-    comp_desc = st.text_area("Faoliyat sohasi", value=DEFAULT_COMPANY_PROFILE["description"], height=60)
-    comp_exp = st.text_input("Tajriba davri", value=DEFAULT_COMPANY_PROFILE["experience_years"])
+    if is_guest:
+        comp_name = st.text_input("Kompaniya nomi", value="", placeholder="masalan: Grand Stroy MCHJ")
+        comp_founder = st.text_input("Mas'ul shaxs", value="", placeholder="Rahbar yoki mutaxassis F.I.SH")
+        comp_desc = st.text_area("Faoliyat sohasi", value="", placeholder="Kompaniyangiz faoliyati va xizmatlari (masalan: Qurilish, IT, Mebel...)", height=60)
+        comp_exp = st.text_input("Tajriba davri", value="3 yil")
+    else:
+        comp_name = st.text_input("Kompaniya nomi", value=current_user.get("company_name", ""))
+        comp_founder = st.text_input("Mas'ul shaxs", value=current_user.get("contact_person") or (DEFAULT_COMPANY_PROFILE["founder"] if current_user["username"] == "demo" else ""))
+        comp_desc = st.text_area("Faoliyat sohasi", value=DEFAULT_COMPANY_PROFILE["description"] if current_user["username"] == "demo" else "Kompaniya xizmat va mahsulotlari", height=60)
+        comp_exp = st.text_input("Tajriba davri", value=DEFAULT_COMPANY_PROFILE["experience_years"] if current_user["username"] == "demo" else "3 yil")
     
     st.divider()
     st.markdown("🌐 **Ulangan Portallar & Sektorlar:**")
@@ -337,10 +363,10 @@ with st.sidebar:
         st.caption(f"• **{portal}** — {desc_text}")
 
 company_profile = {
-    "name": comp_name,
-    "founder": comp_founder,
-    "description": comp_desc,
-    "experience_years": comp_exp,
+    "name": comp_name.strip() if comp_name.strip() else (current_user.get("company_name") if not is_guest else "Mening Kompaniyam"),
+    "founder": comp_founder.strip() if comp_founder.strip() else "Mas'ul",
+    "description": comp_desc.strip() if comp_desc.strip() else (DEFAULT_COMPANY_PROFILE["description"] if (not is_guest and current_user.get("username") == "demo") else "B2B xizmatlar va savdo"),
+    "experience_years": comp_exp.strip() if comp_exp.strip() else "3+ yil",
     "core_services": DEFAULT_COMPANY_PROFILE["core_services"],
     "qualification_highlights": DEFAULT_COMPANY_PROFILE["qualification_highlights"]
 }
@@ -744,12 +770,29 @@ with tab_audit:
             st.warning("Iltimos, avval tender faylini yuklang yoki Radardan biror lotni tanlang!")
         else:
             # Credit validation
-            credit_available = DatabaseManager.use_audit_credit(current_user["username"])
-            if not credit_available:
-                st.error("🚫 **Audit limitlaringiz tugadi!** Bepul tarifingizdagi barcha kreditlar sarflangan.")
-                st.info("Yangi tenderlarni audit qilish va rasmiy Word hujjatlarini olish uchun '💎 5. Tariflar & Obuna' tabida qulay tarifni tanlang.")
+            if current_user.get("is_guest"):
+                guest_credits = current_user.get("credits_left", 3)
+                if guest_credits > 0:
+                    current_user["credits_left"] = guest_credits - 1
+                    st.session_state["auth_user"] = current_user
+                    credit_available = True
+                else:
+                    credit_available = False
             else:
-                st.session_state["auth_user"] = DatabaseManager.get_user(current_user["username"])
+                credit_available = DatabaseManager.use_audit_credit(current_user["username"])
+                if credit_available:
+                    refreshed = DatabaseManager.get_user(current_user["username"])
+                    if refreshed:
+                        st.session_state["auth_user"] = refreshed
+
+            if not credit_available:
+                if current_user.get("is_guest"):
+                    st.error("🚫 **Sinov kreditlaringiz tugadi!** 3 ta bepul AI audit imkoniyati to'liq sarflandi.")
+                    st.info("Davom etish uchun chap menyudagi **'🎁 Ro'yxatdan o'tish'** bo'limida telefon raqamingizni qoldiring yoki '💎 5. Tariflar' sahifasidan to'liq tarifni faollashtiring.")
+                else:
+                    st.error("🚫 **Audit limitlaringiz tugadi!** Bepul tarifingizdagi barcha kreditlar sarflangan.")
+                    st.info("Yangi tenderlarni audit qilish va rasmiy Word hujjatlarini olish uchun '💎 5. Tariflar & Obuna' tabida qulay tarifni tanlang.")
+            else:
                 with st.status("🔍 AI audit va tahlil boshlanmoqda...", expanded=True) as status_box:
                     try:
                         st.write("📄 1/3: Texnik topshiriq va malaka talablari o'qilmoqda...")
