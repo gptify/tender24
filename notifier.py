@@ -113,14 +113,14 @@ class TenderNotifier:
         link = tender.get("link", "#")
 
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"🎯 [TenderPro AI] Yangi Mos Tender: {lot_id} ({score}% moslik)"
+        msg["Subject"] = f"🎯 [TenderPro²⁴] Yangi Mos Tender: {lot_id} ({score}% moslik)"
         msg["From"] = user
         msg["To"] = recipient_email
 
         html_body = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #E2E8F0; border-radius: 8px; padding: 20px;">
             <div style="background-color: #1E3A8A; color: white; padding: 12px 16px; border-radius: 6px;">
-                <h2 style="margin: 0; font-size: 1.2rem;">⚖️ TenderPro AI: Yangi Mos Lot Topildi</h2>
+                <h2 style="margin: 0; font-size: 1.2rem;">🛡️ TenderPro²⁴: Yangi Mos Lot Topildi</h2>
             </div>
             <p style="font-size: 1.1rem; font-weight: bold; color: #16A34A; margin-top: 15px;">🔥 Moslik Darajasi: {score}%</p>
             <p><strong>Mavzu:</strong> {title}</p>

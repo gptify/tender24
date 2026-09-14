@@ -38,15 +38,18 @@ except ImportError:
 # Page Configuration
 st.set_page_config(
     page_title="TenderPro²⁴ — O'zbekiston Davlat va B2B Tenderlari Auditi",
-    page_icon="⚖️",
+    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling: Clean Modern B2B SaaS Theme (High-Contrast & Light Theme Safe)
+# Custom Styling: EuroWork AI & MedPro24 Modern B2B SaaS Theme
 st.markdown("""
 <style>
-    .stApp {
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
+    html, body, [class*="css"], .stApp {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #F8FAFC !important;
         color: #0F172A !important;
     }
@@ -258,29 +261,40 @@ company_profile = {
 
 # Top SaaS Header Bar
 logo_b64 = ""
-_lp = Path(__file__).resolve().parent / "logo.jpg"
+_lp = Path(__file__).resolve().parent / "logo_icon.png"
+if not _lp.exists():
+    _lp = Path(__file__).resolve().parent / "logo.jpg"
+if not _lp.exists():
+    _lp = Path("logo_icon.png")
 if not _lp.exists():
     _lp = Path("logo.jpg")
+
 if _lp.exists():
     import base64
+    ext = "png" if _lp.suffix.lower() == ".png" else "jpeg"
     logo_b64 = base64.b64encode(_lp.read_bytes()).decode("utf-8")
-
-header_icon_html = f'<img src="data:image/jpeg;base64,{logo_b64}" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">' if logo_b64 else '<div style="background: #2563EB; color: white; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">⚖️</div>'
+    header_icon_html = f'<img src="data:image/{ext};base64,{logo_b64}" style="width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">'
+else:
+    header_icon_html = '<div style="background: #1D4ED8; color: white; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">🛡️</div>'
 
 st.markdown(f"""
-<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-    <div style="display: flex; align-items: center; gap: 14px;">
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 14px 22px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+    <div style="display: flex; align-items: center; gap: 16px;">
         {header_icon_html}
         <div>
-            <div style="font-size: 1.35rem; font-weight: 900; color: #0F172A; line-height: 1.1; letter-spacing: -0.02em;">
-                TenderPro<span style="color: #2563EB;">²⁴</span> <span style="font-size: 0.72rem; background-color: #0F172A; color: #38BDF8; font-weight: 700; padding: 2px 8px; border-radius: 8px; border: 1px solid #1E293B; vertical-align: middle;">AI SUITE</span>
+            <div style="font-size: 1.42rem; font-weight: 800; color: #0F172A; line-height: 1.1; letter-spacing: -0.02em;">
+                TenderPro<span style="color: #F59E0B; font-weight: 900;">²⁴</span> <span style="font-size: 0.72rem; background-color: #0F172A; color: #38BDF8; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid #1E293B; vertical-align: middle; margin-left: 6px;">PROCUREMENT AI</span>
             </div>
-            <div style="font-size: 0.82rem; color: #64748B;">O'zbekiston Davlat, BMT va B2B Xaridlar Intellekti • GPTify.co</div>
+            <div style="font-size: 0.82rem; color: #64748B; font-weight: 500; margin-top: 2px;">O'zbekiston Davlat, BMT/NNT va B2B Tenderlar Intellekti • GPTify.co</div>
         </div>
     </div>
-    <div>
-        <span style="background: #F8FAFC; color: #334155; font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; border: 1px solid #E2E8F0;">
-            Qamrov: Davlat xaridlari • Xalqaro NNT & BMT • Xususiy B2B & Banklar
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="background: #F0FDF4; color: #166534; font-size: 0.8rem; font-weight: 700; padding: 5px 12px; border-radius: 20px; border: 1px solid #BBF7D0; display: inline-flex; align-items: center; gap: 6px;">
+            <span style="width: 7px; height: 7px; background: #22C55E; border-radius: 50%; display: inline-block;"></span>
+            24/7 Radar: Faol
+        </span>
+        <span style="background: #F8FAFC; color: #334155; font-size: 0.8rem; font-weight: 600; padding: 5px 12px; border-radius: 20px; border: 1px solid #E2E8F0;">
+            🇺🇿 UzEx • UNGM • Banklar
         </span>
     </div>
 </div>
@@ -301,17 +315,26 @@ tab_radar, tab_audit, tab_docs, tab_telegram, tab_pricing, tab_guide = st.tabs([
 # TAB 1: TENDERLAR RADARI (Live Multi-Sector Scanner & Radar)
 # ---------------------------------------------------------
 with tab_radar:
-    # 1. Clear Guide Banner
+    # EuroWork AI Signature Hero Banner
     st.markdown("""
-    <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 20px; margin-bottom: 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div>
-                <span style="font-weight: 700; color: #1E293B; font-size: 0.95rem;">💡 Qanday ishlatiladi?</span>
-                <span style="color: #64748B; font-size: 0.88rem; margin-left: 8px;">
-                    1. Kerakli xarid sektorini tanlang ➔ 2. Lot kartasidagi <strong>"⚡️ Audit Qilish"</strong> tugmasini bosing ➔ 3. <strong>"📝 3. Takliflar"</strong> tabida Word taklifini oling.
-                </span>
-            </div>
+    <div style="
+        background: linear-gradient(135deg, #071638 0%, #0F2B66 45%, #1D4ED8 100%);
+        border-radius: 16px;
+        padding: 30px 36px;
+        color: white;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 25px -5px rgba(15, 43, 102, 0.35);
+    ">
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(8px); padding: 4px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.2);">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
+            O'zbekiston Davlat & B2B Xarid Operatsion Tizimi
         </div>
+        <h1 style="font-size: 2.1rem; font-weight: 800; line-height: 1.25; margin-bottom: 10px; color: #FFFFFF; letter-spacing: -0.02em;">
+            O'zbekiston Davlat va Korporativ Tenderlarini AI Bilan Yuting
+        </h1>
+        <p style="font-size: 0.98rem; color: #E2E8F0; line-height: 1.5; margin-bottom: 0; max-width: 820px;">
+            Xarid.uzex.uz, Tender.mc.uz, XT-Xarid va 4 ta rasmiy portaldan eng daromadli lotlar, korrupsiyasiz texnik tahlil va 1-bosishda g'olib taklif tayyorlash.
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -565,7 +588,7 @@ with tab_audit:
                         pdf_b64 = st.session_state.get("pdf_base64", None)
                         analyzer = TenderAnalyzer()
                         analysis_results = analyzer.analyze_tender(tender_raw_text, company_profile, pdf_base64=pdf_b64)
-                        st.write("⚖️ 3/3: Go / No-Go qarori va optimal narx strategiyasi shakllantirildi.")
+                        st.write("🎯 3/3: Go / No-Go qarori va optimal narx strategiyasi shakllantirildi.")
                         st.session_state["analysis_results"] = analysis_results
                         st.session_state["current_tender_text"] = tender_raw_text
                         
