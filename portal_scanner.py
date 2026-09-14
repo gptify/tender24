@@ -43,7 +43,10 @@ class PortalScanner:
     @classmethod
     def load_cached_tenders(cls) -> List[Dict[str, Any]]:
         """Loads cached tender opportunities merged with all default curated multi-sector lots."""
-        from src.tender_ai.tender_finder import TenderFinder
+        try:
+            from src.tender_ai.tender_finder import TenderFinder
+        except ImportError:
+            from tender_finder import TenderFinder
         if CACHE_FILE.exists():
             try:
                 with open(CACHE_FILE, "r", encoding="utf-8") as f:
@@ -146,8 +149,10 @@ class PortalScanner:
         chat_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Executes a manual or automated scan across portals, parses fresh data, 
-        evaluates AI relevance, and notifies on high matches."""
-        from src.tender_ai.tender_finder import TenderFinder
+        try:
+            from src.tender_ai.tender_finder import TenderFinder
+        except ImportError:
+            from tender_finder import TenderFinder
         profile = company_profile or DEFAULT_COMPANY_PROFILE
 
         # 1. Fetch real live lots directly from UzEx Oracle API

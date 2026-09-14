@@ -314,12 +314,17 @@ class TenderFinder:
         *args,
         **kwargs
     ) -> List[Dict[str, Any]]:
-        """Filters, evaluates, and ranks available procurement opportunities from live cache or curated database."""
-        from src.tender_ai.config import DEFAULT_COMPANY_PROFILE
+        try:
+            from src.tender_ai.config import DEFAULT_COMPANY_PROFILE
+        except ImportError:
+            from config import DEFAULT_COMPANY_PROFILE
         profile = company_profile or DEFAULT_COMPANY_PROFILE
 
         try:
-            from src.tender_ai.portal_scanner import PortalScanner
+            try:
+                from src.tender_ai.portal_scanner import PortalScanner
+            except ImportError:
+                from portal_scanner import PortalScanner
             opportunities_pool = PortalScanner.load_cached_tenders()
         except Exception:
             opportunities_pool = cls.DEFAULT_OPPORTUNITIES
