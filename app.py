@@ -301,8 +301,14 @@ with tab_radar:
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. Unified Search & Filter Control Bar
-    current_kw = st.session_state.get("radar_kw", "")
+    # Check if a lot or search query parameter was passed from Telegram link
+    query_lot = st.query_params.get("lot") or st.query_params.get("search")
+    if query_lot and "param_loaded" not in st.session_state:
+        st.session_state["radar_kw"] = query_lot
+        st.session_state["param_loaded"] = True
+        current_kw = query_lot
+    else:
+        current_kw = st.session_state.get("radar_kw", "")
     
     with st.container(border=True):
         f_c1, f_c2, f_c3, f_c4 = st.columns([2.2, 1.2, 1.2, 1.0])

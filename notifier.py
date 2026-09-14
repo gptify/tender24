@@ -38,6 +38,9 @@ class TenderNotifier:
         link = tender.get("link", f"https://{portal}")
         category = tender.get("category", "IT & Dasturiy ta'minot")
 
+        web_url = (os.getenv("TENDER_WEB_URL") or "https://tenderpro24.streamlit.app").strip().rstrip("/")
+        app_lot_link = f"{web_url}/?lot={lot_id}"
+
         message = (
             f"🎯 <b>YANGI MOS TENDER ANIQLANDI!</b>\n"
             f"━━━━━━━━━━━━━━━━━━━\n"
@@ -48,7 +51,8 @@ class TenderNotifier:
             f"💰 <b>Boshlang'ich narx:</b> <b>{price}</b>\n"
             f"⏳ <b>Topshirish muddati:</b> <b>{deadline}</b>\n"
             f"━━━━━━━━━━━━━━━━━━━\n"
-            f"🔗 <a href=\"{link}\">Portaldagi lotni ochish</a> | ⚡️ <i>TenderPro AI Avtomatik Bildirishnomasi</i>"
+            f"👉 <b><a href=\"{app_lot_link}\">Tender24 Ilovasida Ko'rish va Tahlil Qilish ➔</a></b>\n"
+            f"🔗 <a href=\"{link}\">Rasmiy Portaldagi Lot Sahifasi</a>"
         )
 
         url = f"https://api.telegram.org/bot{token}/sendMessage"
