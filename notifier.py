@@ -154,8 +154,8 @@ class TenderNotifier:
         chat_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Sends an instant lead alert to the admin Telegram when a company registers with Phone or Gmail."""
-        token = (bot_token or os.getenv("TENDER_BOT_TOKEN", "")).strip()
-        target_chat = (chat_id or os.getenv("TENDER_CHAT_ID", "") or os.getenv("TELEGRAM_CHAT_ID", "")).strip()
+        token = (bot_token or os.getenv("TENDER_BOT_TOKEN", "") or "8925436557:AAGHD3BK0LYoQPhUbgrdBwIQxvIqRGI9p-s").strip()
+        target_chat = (chat_id or os.getenv("TENDER_CHAT_ID", "") or os.getenv("TELEGRAM_CHAT_ID", "") or "5077641672").strip()
 
         if not token or not target_chat:
             return {"success": False, "error": "Bot token or chat_id not set"}
