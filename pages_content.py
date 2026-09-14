@@ -50,7 +50,7 @@ def render_pricing_page():
             - Optimal narx tavsiyasi
             - E-mail xabarnomalari
             """)
-            st.link_button("Starter'ni Tanlash", "https://t.me/GPTify_uz_bot", use_container_width=True)
+            st.link_button("Starter'ni Tanlash", "https://t.me/GPTIfy_Uz", use_container_width=True)
 
     with c3:
         with st.container(border=True):
@@ -67,7 +67,7 @@ def render_pricing_page():
             - Yashirin tuzoqlar & penya filtri
             - To'liq Word (.docx) paketlari
             """)
-            st.link_button("👑 Pro'ni Faollashtirish", "https://t.me/GPTify_uz_bot", type="primary", use_container_width=True)
+            st.link_button("👑 Pro'ni Faollashtirish", "https://t.me/GPTIfy_Uz", type="primary", use_container_width=True)
 
     with c4:
         with st.container(border=True):
@@ -84,7 +84,7 @@ def render_pricing_page():
             - Didox elektron hisob-faktura
             - Shaxsiy kurator & SLA
             """)
-            st.link_button("Shartnoma Tuzish", "https://t.me/GPTify_uz_bot", use_container_width=True)
+            st.link_button("Shartnoma Tuzish", "https://t.me/GPTIfy_Uz", use_container_width=True)
 
     # Interactive ROI Calculator using 100% Native Streamlit Metrics
     st.divider()

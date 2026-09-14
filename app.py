@@ -212,8 +212,11 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander("🔑 Hisobni almashtirish"):
-        tab_login, tab_reg = st.tabs(["Kirish", "Ro'yxatdan o'tish"])
+    is_demo = (current_user["username"] == "demo")
+    expander_title = "🔑 Kirish yoki Ro'yxatdan o'tish" if is_demo else f"⚙️ Hisob: @{current_user['username']} (Almashtirish)"
+    
+    with st.expander(expander_title, expanded=False):
+        tab_login, tab_reg = st.tabs(["Kirish", "Yangi Hisob"])
         with tab_login:
             login_u = st.text_input("Login", value="demo", key="sb_login_u")
             login_p = st.text_input("Parol", value="demo123", type="password", key="sb_login_p")
@@ -222,19 +225,42 @@ with st.sidebar:
                 if user_record:
                     st.session_state["auth_user"] = user_record
                     st.success("Muvaffaqiyatli kirdingiz!")
+                    time.sleep(0.5)
                     st.rerun()
                 else:
                     st.error("Login yoki parol noto'g'ri.")
         with tab_reg:
-            reg_u = st.text_input("Yangi login", key="sb_reg_u")
-            reg_p = st.text_input("Yangi parol", type="password", key="sb_reg_p")
-            reg_comp = st.text_input("Kompaniya nomi", key="sb_reg_c")
-            if st.button("3 ta bepul audit bilan ro'yxatdan o'tish", key="btn_reg", use_container_width=True):
-                reg_res = DatabaseManager.register_user(reg_u, reg_p, reg_comp)
-                if reg_res.get("success"):
-                    st.success("Hisob yaratildi! Endi kirishingiz mumkin.")
+            reg_u = st.text_input("Yangi login", key="sb_reg_u", placeholder="masalan: akmal_biznes")
+            reg_p = st.text_input("Yangi parol", type="password", key="sb_reg_p", placeholder="Kamida 4 ta belgi")
+            reg_comp = st.text_input("Kompaniya nomi", key="sb_reg_c", placeholder="masalan: Grand Tech MCHJ")
+            if st.button("🚀 3 ta bepul audit bilan ro'yxatdan o'tish", key="btn_reg", type="primary", use_container_width=True):
+                if not reg_u.strip() or not reg_p.strip():
+                    st.warning("Iltimos, login va parolni kiriting.")
                 else:
-                    st.error(reg_res.get("error"))
+                    reg_res = DatabaseManager.register_user(reg_u, reg_p, reg_comp)
+                    if reg_res.get("success"):
+                        user_record = DatabaseManager.authenticate_user(reg_u, reg_p)
+                        if user_record:
+                            st.session_state["auth_user"] = user_record
+                            st.success(f"🎉 Xush kelibsiz, @{reg_u}! 3 ta bepul audit taqdim etildi.")
+                            time.sleep(0.8)
+                            st.rerun()
+                        else:
+                            st.success("Hisob yaratildi! Endi 'Kirish' tabidan kiring.")
+                    else:
+                        st.error(reg_res.get("error"))
+        
+        if not is_demo:
+            st.divider()
+            if st.button("🚪 Demo hisobga qaytish (Chiqish)", key="btn_logout", use_container_width=True):
+                user_rec = DatabaseManager.get_user("demo")
+                st.session_state["auth_user"] = user_rec or {
+                    "username": "demo",
+                    "company_name": DEFAULT_COMPANY_PROFILE["name"],
+                    "tier": "pro",
+                    "credits_left": 999
+                }
+                st.rerun()
 
     st.divider()
     st.subheader("🏢 Kompaniya Rekvizitlari")
