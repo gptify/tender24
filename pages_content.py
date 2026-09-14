@@ -244,12 +244,12 @@ def render_footer():
         <p style="margin: 0;">
             <strong>3. Qonuniylik:</strong> Barcha jarayonlar O'zbekiston Respublikasining "Davlat xaridlari to'g'risida"gi Qonuni (O'RQ-684) hamda xalqaro xarid standartlariga muvofiq olib boriladi.
         </p>
-        <div style="border-top: 1px solid #CBD5E1; margin-top: 10px; padding-top: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div style="border-top: 1px solid #CBD5E1; margin-top: 12px; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div>
-                © 2026 <strong>GPTify (GPTify.co)</strong> — B2B AI ish oqimlari va tizimlari konsaltingi. <strong>GPTify Uzbekistan Jamoasi</strong> tomonidan ishlab chiqilgan.
+                © 2026 <strong>TenderPro²⁴</strong> — Ushbu platforma <strong>GPTify.uz Labs jamoasi</strong> tomonidan ishlab chiqilgan.
             </div>
             <div>
-                Aloqa: <a href="https://t.me/GPTify_uz_bot" target="_blank" style="color: #2563EB; text-decoration: none; font-weight: 600;">@GPTify_uz_bot</a> | contact@gptify.co
+                Aloqa: <a href="https://t.me/GPTIfy_Uz" target="_blank" style="color: #2563EB; text-decoration: none; font-weight: 600;">@GPTIfy_Uz</a> | info@gptify.uz
             </div>
         </div>
     </div>

@@ -285,7 +285,7 @@ st.markdown(f"""
             <div style="font-size: 1.42rem; font-weight: 800; color: #0F172A; line-height: 1.1; letter-spacing: -0.02em;">
                 TenderPro<span style="color: #F59E0B; font-weight: 900;">²⁴</span> <span style="font-size: 0.72rem; background-color: #0F172A; color: #38BDF8; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid #1E293B; vertical-align: middle; margin-left: 6px;">PROCUREMENT AI</span>
             </div>
-            <div style="font-size: 0.82rem; color: #64748B; font-weight: 500; margin-top: 2px;">O'zbekiston Davlat, BMT/NNT va B2B Tenderlar Intellekti • GPTify.co</div>
+            <div style="font-size: 0.82rem; color: #64748B; font-weight: 500; margin-top: 2px;">O'zbekiston Davlat, BMT/NNT va B2B Tenderlar Portali • GPTify.uz Labs</div>
         </div>
     </div>
     <div style="display: flex; align-items: center; gap: 10px;">
@@ -315,7 +315,7 @@ tab_radar, tab_audit, tab_docs, tab_telegram, tab_pricing, tab_guide = st.tabs([
 # TAB 1: TENDERLAR RADARI (Live Multi-Sector Scanner & Radar)
 # ---------------------------------------------------------
 with tab_radar:
-    # EuroWork AI Signature Hero Banner
+    # StepStone / EuroWork AI Signature Hero Banner
     st.markdown("""
     <div style="
         background: linear-gradient(135deg, #071638 0%, #0F2B66 45%, #1D4ED8 100%);
@@ -327,7 +327,7 @@ with tab_radar:
     ">
         <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(8px); padding: 4px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.2);">
             <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
-            O'zbekiston Davlat & B2B Xarid Operatsion Tizimi
+            O'zbekiston Davlat & B2B Tenderlar Portali
         </div>
         <h1 style="font-size: 2.1rem; font-weight: 800; line-height: 1.25; margin-bottom: 10px; color: #FFFFFF; letter-spacing: -0.02em;">
             O'zbekiston Davlat va Korporativ Tenderlarini AI Bilan Yuting
@@ -412,7 +412,7 @@ with tab_radar:
             st.session_state["radar_kw"] = ""
             st.rerun()
 
-    # 3. Helper function to render lot cards
+    # 3. Helper function to render lot cards (StepStone 2-Column Master-Detail Layout)
     def render_lot_card_list(sector_name: str):
         lots = TenderFinder.search_opportunities(
             query=search_query,
@@ -424,68 +424,152 @@ with tab_radar:
             company_profile=company_profile
         )
 
-        st.caption(f"Topilgan imkoniyatlar soni: **{len(lots)} ta lot**")
+        st.caption(f"Topilgan imkoniyatlar soni: **{len(lots)} ta rasmiy tender** (StepStone 2-ustunli master-detail interfeysi)")
 
         if len(lots) == 0:
             st.info("Ushbu filtrlar bo'yicha lot topilmadi. Yuqoridagi qidiruv so'zini tozalab ko'ring.")
             return
 
-        for opp in lots:
-            score = opp.get("match_score", 50)
-            badge_bg = "#DCFCE7" if score >= 80 else ("#FEF3C7" if score >= 55 else "#F1F5F9")
-            badge_color = "#15803D" if score >= 80 else ("#B45309" if score >= 55 else "#475569")
-            
-            opp_sec = opp.get("sector", "Davlat sektori")
-            sec_badge_color = "#1D4ED8" if opp_sec == "Davlat sektori" else ("#7C3AED" if "NNT" in opp_sec else "#047857")
-            sec_badge_bg = "#EFF6FF" if opp_sec == "Davlat sektori" else ("#F5F3FF" if "NNT" in opp_sec else "#ECFDF5")
-            sec_icon = "🏛" if opp_sec == "Davlat sektori" else ("💎" if "NNT" in opp_sec else "🏢")
+        # Ensure active selected lot is tracked
+        lot_ids = [l["lot_id"] for l in lots]
+        active_lot_id = st.session_state.get("selected_lot_id")
+        if not active_lot_id or active_lot_id not in lot_ids:
+            active_lot_id = lots[0]["lot_id"]
+            st.session_state["selected_lot_id"] = active_lot_id
 
-            with st.container(border=True):
-                o_h1, o_h2 = st.columns([3, 1.2])
-                with o_h1:
-                    st.markdown(f"#### {opp['title']}")
+        selected_lot = next((l for l in lots if l["lot_id"] == active_lot_id), lots[0])
+
+        col_list, col_detail = st.columns([1.1, 1.45], gap="medium")
+
+        # LEFT COLUMN: StepStone-style scrollable cards list
+        with col_list:
+            for opp in lots:
+                is_selected = (opp["lot_id"] == active_lot_id)
+                score = opp.get("match_score", 50)
+                opp_sec = opp.get("sector", "Davlat sektori")
+
+                card_border = "2px solid #2563EB" if is_selected else "1px solid #E2E8F0"
+                card_bg = "#EFF6FF" if is_selected else "#FFFFFF"
+                initials = "UZ" if "uzex" in opp.get("portal", "").lower() else ("UN" if "ungm" in opp.get("portal", "").lower() or "bmt" in opp_sec.lower() else "B2B")
+                avatar_bg = "#1D4ED8" if initials == "UZ" else ("#7C3AED" if initials == "UN" else "#0D9488")
+
+                st.markdown(f"""
+                <div style="background-color: {card_bg}; border: {card_border}; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="background-color: {avatar_bg}; color: white; font-weight: 800; font-size: 0.8rem; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            {initials}
+                        </div>
+                        <div style="flex-grow: 1;">
+                            <div style="font-size: 0.95rem; font-weight: 700; color: #0F172A; line-height: 1.3; margin-bottom: 4px;">
+                                {opp['title'][:80] + ('...' if len(opp['title']) > 80 else '')}
+                            </div>
+                            <div style="font-size: 0.8rem; color: #64748B; margin-bottom: 8px;">
+                                🏛 {opp['customer'][:45]} • <span style="color: #0284C7; font-weight: 600;">{opp['portal']}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                <span style="background-color: #ECFDF5; color: #047857; font-weight: 800; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #A7F3D0;">
+                                    💰 {opp['starting_price']}
+                                </span>
+                                <span style="background-color: #FEF3C7; color: #B45309; font-weight: 700; padding: 2px 7px; border-radius: 6px; font-size: 0.78rem;">
+                                    🎯 {score}% moslik
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                c_sel1, c_sel2 = st.columns([1.5, 1])
+                with c_sel1:
+                    btn_label = "✅ Tanlangan" if is_selected else "Tafsilotlar 👉"
+                    if st.button(btn_label, key=f"sel_{sector_name}_{opp['lot_id']}", use_container_width=True):
+                        st.session_state["selected_lot_id"] = opp["lot_id"]
+                        st.rerun()
+                with c_sel2:
+                    st.caption(f"⏳ {opp.get('deadline', 'Muddatsiz')}")
+
+        # RIGHT COLUMN: StepStone-style Rich Detail Dossier
+        with col_detail:
+            if selected_lot:
+                sel_sec = selected_lot.get("sector", "Davlat sektori")
+                sec_badge_color = "#1D4ED8" if sel_sec == "Davlat sektori" else ("#7C3AED" if "NNT" in sel_sec else "#047857")
+                sec_badge_bg = "#EFF6FF" if sel_sec == "Davlat sektori" else ("#F5F3FF" if "NNT" in sel_sec else "#ECFDF5")
+                sel_score = selected_lot.get("match_score", 50)
+
+                with st.container(border=True):
+                    # Header
                     st.markdown(f"""
-                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px;">
-                        <span style="background-color: {sec_badge_bg}; color: {sec_badge_color}; font-weight: 700; padding: 2px 8px; border-radius: 8px; font-size: 0.78rem; border: 1px solid {sec_badge_color}30;">
-                            {sec_icon} {opp_sec}
-                        </span>
-                        <span style="background-color: #F1F5F9; color: #334155; font-weight: 600; padding: 2px 8px; border-radius: 8px; font-size: 0.78rem;">
-                            🌐 {opp['portal']}
-                        </span>
-                        <span style="color: #64748B; font-size: 0.78rem;">
-                            ID: {opp['lot_id']}
-                        </span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background-color: {sec_badge_bg}; color: {sec_badge_color}; font-weight: 700; padding: 3px 10px; border-radius: 8px; font-size: 0.8rem; border: 1px solid {sec_badge_color}30;">
+                                {sel_sec}
+                            </span>
+                            <span style="color: #10B981; font-weight: 700; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 4px;">
+                                ✓ RASMIY TEKSHIRILGAN LOT
+                            </span>
+                        </div>
+                        <span style="color: #64748B; font-size: 0.82rem; font-weight: 600;">ID: #{selected_lot['lot_id']}</span>
+                    </div>
+                    <h3 style="color: #0F172A; font-weight: 800; line-height: 1.3; margin-bottom: 8px;">{selected_lot['title']}</h3>
+                    <div style="font-size: 0.88rem; color: #475569; margin-bottom: 16px;">
+                        🏛 <strong>Buyurtmachi:</strong> {selected_lot['customer']} &nbsp;|&nbsp; 🌐 <strong>Portal:</strong> {selected_lot['portal']}
                     </div>
                     """, unsafe_allow_html=True)
-                    st.caption(f"🏛 **Buyurtmachi:** {opp['customer']}")
-                with o_h2:
+
+                    # Action buttons
+                    d_act1, d_act2 = st.columns([1.6, 1])
+                    with d_act1:
+                        full_lot_text = f"TENDER / LOT: {selected_lot['lot_id']}\nBUYURTMACHI: {selected_lot['customer']}\nMAVZU: {selected_lot['title']}\nPORTAL: {selected_lot['portal']}\nSEKTOR: {sel_sec}\nBOSHLANG'ICH NARX: {selected_lot['starting_price']}\nMUDDAT: {selected_lot.get('deadline', 'Noma\'lum')}\n\nTAVSIF VA TALABLAR:\n{selected_lot['description']}\n\nMALAKA TALABLARI:\n{selected_lot.get('qualification_brief', 'Standart malaka talablari')}"
+                        if st.button("⚡ 1-Bosishda AI Audit & Taklif Tayyorlash", key=f"dossier_audit_{selected_lot['lot_id']}", type="primary", use_container_width=True):
+                            st.session_state["tender_text"] = full_lot_text
+                            st.session_state["current_tender_link"] = selected_lot.get("link", "")
+                            st.session_state["selected_lot_title"] = selected_lot['title']
+                            st.session_state["trigger_auto_analysis"] = True
+                            st.success(f"✅ Yuklandi! Yuqoridagi '🔍 2. AI Audit & Tuzoqlar' tabiga o'ting.")
+                    with d_act2:
+                        if selected_lot.get("link"):
+                            st.link_button("Rasmiy Sahifasi ↗", selected_lot["link"], use_container_width=True)
+
+                    st.divider()
+
+                    # StepStone 6-Box Metric Grid
                     st.markdown(f"""
-                    <div style="text-align: right;">
-                        <span style="background-color: {badge_bg}; color: {badge_color}; font-weight: 700; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                            Moslik: {score}%
-                        </span>
-                        <div style="font-size: 1.15rem; font-weight: 800; color: #1E3A8A; margin-top: 4px;">{opp['starting_price']}</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
+                        <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 10px 12px;">
+                            <div style="font-size: 0.74rem; font-weight: 700; color: #15803D; text-transform: uppercase;">Boshlang'ich Narx</div>
+                            <div style="font-size: 1.02rem; font-weight: 800; color: #047857; margin-top: 2px;">{selected_lot['starting_price']}</div>
+                        </div>
+                        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 10px 12px;">
+                            <div style="font-size: 0.74rem; font-weight: 700; color: #1D4ED8; text-transform: uppercase;">Topshirish Muddati</div>
+                            <div style="font-size: 0.95rem; font-weight: 700; color: #1E3A8A; margin-top: 2px;">{selected_lot.get('deadline', '45 kun')}</div>
+                        </div>
+                        <div style="background: #FAF5FF; border: 1px solid #E9D5FF; border-radius: 8px; padding: 10px 12px;">
+                            <div style="font-size: 0.74rem; font-weight: 700; color: #7E22CE; text-transform: uppercase;">AI Moslik</div>
+                            <div style="font-size: 1.02rem; font-weight: 800; color: #6B21A8; margin-top: 2px;">{sel_score}% Yuqori</div>
+                        </div>
+                        <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 10px 12px;">
+                            <div style="font-size: 0.74rem; font-weight: 700; color: #B45309; text-transform: uppercase;">Zaklad (Zalog)</div>
+                            <div style="font-size: 0.92rem; font-weight: 700; color: #92400E; margin-top: 2px;">3% Bank kafolati</div>
+                        </div>
+                        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 12px;">
+                            <div style="font-size: 0.74rem; font-weight: 700; color: #475569; text-transform: uppercase;">Xarid Turi</div>
+                            <div style="font-size: 0.92rem; font-weight: 700; color: #1E293B; margin-top: 2px;">Elektron Tender</div>
+                        </div>
+                        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 12px;">
+                            <div style="font-size: 0.74rem; font-weight: 700; color: #475569; text-transform: uppercase;">To'lov Sharti</div>
+                            <div style="font-size: 0.92rem; font-weight: 700; color: #1E293B; margin-top: 2px;">0% Avans / 90 kun</div>
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
 
-                st.write(opp.get("description", ""))
-                
-                c_btn1, c_btn2, c_btn3 = st.columns([1.5, 1.5, 2])
-                with c_btn1:
-                    lot_btn_key = f"audit_lot_{sector_name}_{opp['lot_id']}"
-                    if st.button("⚡️ Audit Qilish", key=lot_btn_key, type="primary", use_container_width=True):
-                        full_text = f"TENDER / LOT: {opp['lot_id']}\nBUYURTMACHI: {opp['customer']}\nMAVZU: {opp['title']}\nPORTAL: {opp['portal']}\nSEKTOR: {opp_sec}\nBOSHLANG'ICH NARX: {opp['starting_price']}\nMUDDAT: {opp.get('deadline', 'Noma\'lum')}\n\nTAVSIF VA TALABLAR:\n{opp['description']}\n\nMALAKA TALABLARI:\n{opp.get('qualification_brief', 'Standart malaka talablari')}"
-                        st.session_state["tender_text"] = full_text
-                        st.session_state["current_tender_link"] = opp.get("link", "")
-                        st.session_state["selected_lot_title"] = opp['title']
-                        st.session_state["trigger_auto_analysis"] = True
-                        st.success(f"✅ Tanlandi! Yuqoridagi **'🔍 2. AI Audit & Tuzoqlar'** tabiga o'ting.")
+                    # Detailed Specification
+                    st.markdown("#### 📋 Texnik Talablar va Ish Hajmi")
+                    st.write(selected_lot.get("description", ""))
 
-                with c_btn2:
-                    if opp.get("link"):
-                        st.link_button("Portaldagi Sahifa ↗", opp["link"], use_container_width=True)
-                with c_btn3:
-                    st.caption(f"⏳ Topshirish muddati: **{opp.get('deadline', 'Noma\'lum')}**")
+                    st.markdown("#### 🛡️ Malaka Talablari (Ishtirokchi Mezonlari)")
+                    st.write(selected_lot.get("qualification_brief", "Ishtirokchidan sohadagi amaliy tajriba, soliq qarzdorligi yo'qligi va tegishli mutaxassislar sertifikatlari talab etiladi."))
+
+                    st.info("💡 Ushbu lot bo'yicha yashirin penya va korrupsion cheklovlarni tekshirish uchun yuqoridagi **'⚡ 1-Bosishda AI Audit Qilish'** tugmasini bosing.")
 
     # 4. Native Sector Tabs for Instant, Reliable Switching
     sec_tab_all, sec_tab_ngo, sec_tab_b2b, sec_tab_state = st.tabs([

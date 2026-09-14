@@ -83,7 +83,7 @@ class DocxExporter:
         run_desc.font.size = Pt(9.5)
         run_desc.font.color.rgb = RGBColor(100, 116, 139)
 
-        addr_str = "Address: Tashkent, Uzbekistan | Tel: +998 (90) 000-00-00\nE-mail: contact@gptify.co | Web: https://gptify.co" if language == "en" else "Manzil: Toshkent sh. | Tel: +998 (90) 000-00-00\nE-mail: contact@gptify.co | Veb: https://gptify.co"
+        addr_str = "Address: Tashkent, Uzbekistan | Tel: +998 (90) 000-00-00\nE-mail: info@gptify.uz | Web: https://gptify.uz" if language == "en" else "Manzil: Toshkent sh. | Tel: +998 (90) 000-00-00\nE-mail: info@gptify.uz | Veb: https://gptify.uz"
         run_contact = p_left.add_run(addr_str)
         run_contact.font.size = Pt(8.5)
         run_contact.font.italic = True
@@ -285,7 +285,7 @@ class DocxExporter:
         r_comp.font.size = Pt(14)
         r_comp.font.color.rgb = RGBColor(30, 58, 138)
 
-        r_sub = p_comp.add_run(f"{profile.get('description')}\nTashkent, Uzbekistan | contact@gptify.co | Tel: +998 (90) 000-00-00\n")
+        r_sub = p_comp.add_run(f"{profile.get('description')}\nTashkent, Uzbekistan | info@gptify.uz | Tel: +998 (90) 000-00-00\n")
         r_sub.font.size = Pt(9.5)
         r_sub.font.color.rgb = RGBColor(100, 116, 139)
 

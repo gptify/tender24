@@ -79,7 +79,7 @@ class DatabaseManager:
             row = cursor.fetchone()
             if row["count"] == 0:
                 demo_users = [
-                    ("demo", cls._hash_password("demo123"), "GPTify (GPTify.co)", "pro", 999, ""),
+                    ("demo", cls._hash_password("demo123"), "GPTify.uz Labs", "pro", 999, ""),
                     ("startup", cls._hash_password("startup123"), "Fintech Solutions MCHJ", "free", 3, "")
                 ]
                 cursor.executemany("""

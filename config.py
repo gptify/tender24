@@ -7,10 +7,10 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Default company profile for GPTify (B2B AI workflow consultancy and systems builder)
+# Default company profile for GPTify.uz Labs
 DEFAULT_COMPANY_PROFILE = {
-    "name": "GPTify (GPTify.co)",
-    "founder": "GPTify Uzbekistan Jamoasi",
+    "name": "GPTify.uz Labs",
+    "founder": "GPTify.uz Labs Jamoasi",
     "description": "Pragmatik B2B AI workflow konsalting, sun'iy intellekt tizimlari integratsiyasi va maxsus dasturiy ta'minot ishlab chiqaruvchisi.",
     "core_services": [
         "Sun'iy intellekt (AI) va LLM asosidagi avtomatlashtirilgan tizimlar",
