@@ -261,8 +261,20 @@ with st.sidebar:
 
                         # Send real-time lead alert to Shukhrat's Telegram
                         import os
-                        tg_token = os.getenv("TENDER_BOT_TOKEN")
-                        tg_chat = os.getenv("TENDER_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID")
+                        tg_token = (
+                            os.getenv("TENDER_BOT_TOKEN")
+                            or (st.secrets.get("TENDER_BOT_TOKEN") if hasattr(st, "secrets") else None)
+                            or os.getenv("TELEGRAM_BOT_TOKEN")
+                            or (st.secrets.get("TELEGRAM_BOT_TOKEN") if hasattr(st, "secrets") else None)
+                            or "8925436557:AAGHD3BK0LYoQPhUbgrdBwIQxvIqRGI9p-s"
+                        )
+                        tg_chat = (
+                            os.getenv("TENDER_CHAT_ID")
+                            or (st.secrets.get("TENDER_CHAT_ID") if hasattr(st, "secrets") else None)
+                            or os.getenv("TELEGRAM_CHAT_ID")
+                            or (st.secrets.get("TELEGRAM_CHAT_ID") if hasattr(st, "secrets") else None)
+                            or "5077641672"
+                        )
                         if tg_token and tg_chat:
                             TenderNotifier.send_lead_registration_alert(
                                 company_name=q_comp or user_obj.get("company_name", "Kompaniya"),
@@ -1036,12 +1048,15 @@ with tab_telegram:
     st.caption("UzEx va boshqa portallarda yangi mos tender e'lon qilingan zahoti Telegram guruhingizga 1-2 daqiqada xabar yetkazish:")
 
     import os
+    default_tg_token = os.getenv("TENDER_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN") or (st.secrets.get("TENDER_BOT_TOKEN") if hasattr(st, "secrets") else None) or "8925436557:AAGHD3BK0LYoQPhUbgrdBwIQxvIqRGI9p-s"
+    default_tg_chat = os.getenv("TENDER_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID") or (st.secrets.get("TENDER_CHAT_ID") if hasattr(st, "secrets") else None) or "5077641672"
+    
     tg_col1, tg_col2 = st.columns(2)
     with tg_col1:
-        tg_token_val = st.text_input("Telegram Bot Token", value=os.getenv("TELEGRAM_BOT_TOKEN", ""), type="password", placeholder="123456:ABC-DEF...")
+        tg_token_val = st.text_input("Telegram Bot Token", value=default_tg_token, type="password", placeholder="123456:ABC-DEF...")
         tg_min_score_val = st.slider("Minimal moslik darajasi (%)", min_value=50, max_value=90, value=65, step=5)
     with tg_col2:
-        tg_chat_val = st.text_input("Telegram Chat / Kanal ID", value=os.getenv("TELEGRAM_CHAT_ID", ""), placeholder="-100123456789 yoki @chat_id")
+        tg_chat_val = st.text_input("Telegram Chat / Kanal ID", value=default_tg_chat, placeholder="-100123456789 yoki @chat_id")
         tg_kw_val = st.text_input("Filtrlovchi kalit so'z (ixtiyoriy)", placeholder="AI, CRM, kiberxavfsizlik...")
 
     daemon_status = TelegramAlertDaemon.get_status()
