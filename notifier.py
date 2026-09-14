@@ -56,7 +56,7 @@ class TenderNotifier:
             "chat_id": target_chat,
             "text": message,
             "parse_mode": "HTML",
-            "disable_web_page_preview": False
+            "disable_web_page_preview": True
         }
 
         try:
