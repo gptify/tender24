@@ -496,19 +496,15 @@ with tab_radar:
                 "MedTech & CRM", "Data & Analytics"
             ], label_visibility="collapsed")
         with f_c4:
-            if st.button("🔄 Yangilash", use_container_width=True, help="Portallarni qayta tekshirish"):
-                import os
-                tg_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-                tg_chat = os.getenv("TELEGRAM_CHAT_ID", "")
-                with st.spinner("Portallar tekshirilmoqda..."):
+            if st.button("🔄 Yangilash", type="primary", use_container_width=True, help="UzEx va UNGM portallaridan real lotlarni tortish"):
+                with st.spinner("UzEx va UNGM portallari bo'yicha jonli qidiruv o'tkazilmoqda..."):
                     scan_res = PortalScanner.run_live_scan(
                         company_profile=company_profile,
-                        auto_notify=bool(tg_token and tg_chat),
-                        bot_token=tg_token,
-                        chat_id=tg_chat
+                        auto_notify=False
                     )
                     st.session_state["last_scan_res"] = scan_res
-                    st.success(f"✅ {scan_res['total_lots']} ta lot yangilandi!")
+                    st.success(f"✅ {scan_res['total_lots']} ta jonli tender bazasi yangilandi!")
+                    time.sleep(0.5)
                     st.rerun()
 
         # Quick keyword chips

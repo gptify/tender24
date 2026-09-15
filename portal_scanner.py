@@ -98,7 +98,7 @@ class PortalScanner:
         return status_report
 
     @classmethod
-    def fetch_uzex_live_lots(cls, limit: int = 30) -> List[Dict[str, Any]]:
+    def fetch_uzex_live_lots(cls, limit: int = 40) -> List[Dict[str, Any]]:
         """Directly fetches live public and corporate procurement lots from UzEx API."""
         url = "https://apietender.uzex.uz/api/common/TradeList"
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "Content-Type": "application/json"}
@@ -141,6 +141,77 @@ class PortalScanner:
         return real_lots
 
     @classmethod
+    def fetch_ungm_live_lots(cls, limit: int = 25) -> List[Dict[str, Any]]:
+        """Directly fetches live international procurement notices for Uzbekistan from UNGM (UNDP, UNOPS, UNICEF, IOM, WHO)."""
+        import re
+        s = requests.Session()
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Accept': 'text/html, */*; q=0.01',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+        ungm_lots = []
+        try:
+            s.get('https://www.ungm.org/Public/Notice', headers=headers, timeout=8)
+            payload = {
+                'PageIndex': 0,
+                'PageSize': limit,
+                'Title': '',
+                'Description': 'Uzbekistan',
+                'Reference': '',
+                'PublishedFrom': '',
+                'PublishedTo': '',
+                'DeadlineFrom': '',
+                'DeadlineTo': '',
+                'Countries': [],
+                'Agencies': [],
+                'UNSPSCs': [],
+                'NoticeTypes': [],
+                'SortField': 'Deadline',
+                'SortAscending': True,
+                'isPicker': False,
+                'IsSustainable': False,
+                'IsActive': True,
+                'NoticeDisplayType': None,
+                'NoticeSearchTotalLabelId': 'noticeSearchTotal',
+                'TypeOfCompetitions': []
+            }
+            res = s.post('https://www.ungm.org/Public/Notice/Search', json=payload, headers=headers, timeout=12)
+            if res.status_code == 200:
+                soup = BeautifulSoup(res.text, 'html.parser')
+                rows = soup.find_all('div', class_='dataRow')
+                for row in rows:
+                    nid = row.get('data-noticeid')
+                    cells = [c.get_text(' ', strip=True) for c in row.find_all('div', role='cell')]
+                    if len(cells) >= 6:
+                        raw_title = cells[1].replace('Open in a new window', '').strip()
+                        deadline_raw = cells[2]
+                        m = re.search(r'(\d{1,2}-[A-Za-z]{3}-\d{4})', deadline_raw)
+                        deadline = m.group(1) if m else deadline_raw[:11]
+                        agency = cells[4]
+                        proc_type = cells[5]
+                        ungm_lots.append({
+                            'lot_id': f'UNGM-{nid}',
+                            'portal': 'ungm.org',
+                            'sector': 'Xalqaro NNT & BMT',
+                            'title': raw_title,
+                            'customer': f"{agency} (BMT / UNGM O'zbekiston)",
+                            'starting_price': 'Grant / Valyuta (AQSh dollari)',
+                            'raw_price': 1200000000,
+                            'deadline': deadline,
+                            'category': 'Xalqaro NNT / BMT Loyihalari',
+                            'keywords': ['ungm', agency.lower(), 'grant', 'international', 'bmt'] + [w.lower() for w in raw_title.split() if len(w) > 3][:4],
+                            'description': f"{raw_title}. Agentlik: {agency}. Xarid turi: {proc_type}. BMT / UNGM O'zbekiston loyihasi.",
+                            'qualification_brief': "BMT xarid nizomlari bo'yicha xalqaro tajriba, moliyaviy barqarorlik va ingliz tilidagi hujjatlar talab etiladi.",
+                            'link': f"https://www.ungm.org/Public/Notice/{nid}"
+                        })
+        except Exception as e:
+            print(f"Error fetching live UNGM lots: {e}")
+            
+        return ungm_lots
+
+    @classmethod
     def run_live_scan(
         cls,
         company_profile: Optional[Dict[str, Any]] = None,
@@ -148,20 +219,31 @@ class PortalScanner:
         bot_token: Optional[str] = None,
         chat_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Executes a manual or automated scan across portals, parses fresh data, 
-        evaluates AI relevance, and notifies on high matches."""
+        """Executes a live multi-portal scan across UzEx and UNGM, parses real-time lots, 
+        evaluates AI relevance, and caches for instant radar filtering."""
         try:
             from src.tender_ai.tender_finder import TenderFinder
         except ImportError:
             from tender_finder import TenderFinder
         profile = company_profile or DEFAULT_COMPANY_PROFILE
 
-        # 1. Fetch real live lots directly from UzEx Oracle API
-        live_lots = cls.fetch_uzex_live_lots(limit=30)
+        # 1. Fetch real live state & corporate lots from UzEx Oracle API
+        uzex_lots = cls.fetch_uzex_live_lots(limit=40)
 
-        # 2. If live API succeeds, use them; otherwise fallback to cached
+        # 2. Fetch real live international NGO / UN notices from UNGM API
+        ungm_lots = cls.fetch_ungm_live_lots(limit=25)
+
+        live_lots = uzex_lots + ungm_lots
+
+        # 3. If live APIs succeed, merge with curated benchmark lots
         if not live_lots:
             live_lots = cls.load_cached_tenders()
+        else:
+            cached_defaults = TenderFinder.DEFAULT_OPPORTUNITIES
+            seen_ids = {l["lot_id"] for l in live_lots}
+            for d in cached_defaults:
+                if d["lot_id"] not in seen_ids and "UNGM-" not in d["lot_id"]:
+                    live_lots.append(d)
 
         # Probe portals connectivity
         portal_status = cls.ping_portals()
